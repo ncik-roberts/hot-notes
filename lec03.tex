@@ -125,5 +125,156 @@ This is still pretty general:
     $$0 \cdot (( 0 \cdot 1 \cdots n-1 \cdot M_1[\uparrow^n] \cdots M_k[\uparrow^n] \cdot \uparrow^{n+\ell}) \circ \uparrow)$$
     $$\Downarrow$$
     $$0 \cdot 1 \cdots n \cdot M_1[\uparrow^{n+1}] \cdots M_k[\uparrow^{n+1}] \cdot \uparrow^{n+\ell+1}$$
-\end{enumerate}
 
+\subsection{The type theory of explicit substitution}
+Assuming the type theory of the underlying language, we want to show that:
+\[  \textit{If} \quad \Gamma \vdash \sigma : \Gamma'
+     \quad \textit{and} \quad \Gamma' \vdash M : A, \quad \textit{then} \quad \Gamma \vdash M[\sigma] : A[\sigma].
+\]
+
+There are a few things to note. One is that the type of a substitution $\sigma$ can be described be
+an ordered list of types; in other words, the type of $\sigma$ is a context $\Gamma'$. Next,
+the use of $A[\sigma]$ indicates that the type $A$ may refer to variables in the context $\Gamma$.
+This will require some thought about dependent types. Finally, this framework applies
+equally well to $M$ indicating a term and $A$ a type as it does to $M$ indicating a type
+and $A$ a kind.
+
+Below, we assume $\Gamma$ to be an ordered context of the form $\varepsilon$ or $\Gamma, A$.
+\begin{judgment}[Substitution typing---general rules]
+\[
+  \infer{\Gamma \vdash M \cdot \sigma : \Gamma', A}
+    {\Gamma \vdash \sigma : \Gamma' & \Gamma \vdash M : A[\sigma]}
+\]
+\[
+  \infer{\Gamma \vdash \uparrow^k : \Gamma'}
+    {\Gamma = \Gamma', A_1, \ldots, A_k}
+  \qquad
+  \infer{\varepsilon \vdash \id : \varepsilon}{}
+\]
+\end{judgment}
+
+We can use these rules to perform a simple derivation after converting to de Bruijn indices.
+We wish to derive the RHS of:
+\[
+  y : \int \vdash [\int/\alpha, y/x] : \alpha : \T, x : \alpha
+    \qquad \Longrightarrow_\textnormal{deBruijn} \qquad
+    \int \vdash \int \cdot 0 \cdot \uparrow : \varepsilon, \T, 0
+\]
+We show this, explicitly including $\varepsilon$ as part of the types of substitutions
+(so that it is slightly easier to distinguish judgments on the types of substitutions
+and judgments on the kinds of types).
+\[
+  \infer
+    {\int \vdash 0 \cdot \int \cdot \uparrow : \varepsilon, \T, 0}
+    {\infer
+       {\int \vdash \int \cdot \uparrow : \varepsilon, \T}
+       {\infer
+          {\int \vdash \uparrow : \varepsilon}
+          {}
+       &\infer
+          {\int \vdash \int : \T[\uparrow]}
+          {}
+       }
+    &\infer
+       {\int \vdash 0 : 0[\int.\uparrow]}
+       {\infer
+          {\int \vdash 0 : \int}
+          {}
+       }
+    }
+\]
+
+We perform transformations on the rules of \thref{kind}, now, in this type-theoretic setting.
+\begin{judgment}[Type kind with substitutions]
+  \[
+    \vcenter{ \infer{\Gamma \vdash \alpha : \kappa}{\Gamma(\alpha) : \kappa} }
+    \qquad
+    \Longrightarrow
+    \qquad
+    \vcenter{ \infer{\Gamma \vdash i : \kappa[\uparrow^{i+1}]}{\Gamma(i) : \kappa} }
+  \]
+  \[
+    \vcenter{
+      \infer{\Gamma \vdash \lambda(\alpha : \kappa).c : \kappa \to \kappa'}
+            {\Gamma, \alpha : \kappa \vdash c : \kappa'}
+    }
+    \qquad
+    \Longrightarrow
+    \qquad
+    \vcenter{
+      \infer{\Gamma \vdash \lambda \kappa. c : \kappa \rightarrow \kappa'}
+           {\Gamma, \kappa \vdash c : \kappa'[\uparrow]}
+    }
+  \]
+  Unchanged rules:
+  \[
+  \infer{\Gamma \vdash c_1 ~ c_2 : \kappa'}
+        {\Gamma \vdash c_1 : \kappa \rightarrow \kappa'
+        &\Gamma \vdash c_2 : \kappa
+        }
+  \qquad
+  \infer{\Gamma \vdash \forall(\alpha : \kappa).c : \T}
+        {\Gamma, \alpha : \kappa \vdash c : \T}
+  \]
+\end{judgment}
+The $\forall$ rule may be surprising, since there are no shifts involved, but this is only
+because there's no need to shift $\T$ up as in the lambda rule; $\T$ has no variables.
+
+Finally, we give the same sort of transformations for our term language, transforming
+rules from \thref{term}.
+\begin{judgment}[Term type with substitution]
+  \[
+    \vcenter{ \infer{\Gamma \vdash x : \tau}{\Gamma(x) : \tau} }
+    \qquad
+    \Longrightarrow
+    \qquad
+    \vcenter{ \infer{\Gamma \vdash i : \tau[\uparrow^{i+1}]}{\Gamma(i) : \tau} }
+  \]
+  \[
+    \vcenter{
+      \infer{\Gamma \vdash e[\tau] : [\tau / \alpha]\tau'}
+          {\Gamma \vdash e : \forall(\alpha : \kappa).\tau'
+          &\Gamma \vdash \tau : \kappa
+          }
+    }
+    \qquad
+    \Longrightarrow
+    \qquad
+    \vcenter{
+      \infer{\Gamma \vdash e[c \cdot \id] : \tau [c \cdot \id]}
+        {\Gamma \vdash e : \forall \kappa. \tau
+        & \Gamma \vdash c : \kappa
+        }
+    }
+  \]
+  \[
+    \vcenter{
+      \infer{\Gamma \vdash \lambda(x : \tau).e : \tau \rightarrow \tau'}
+            {\Gamma, x : \tau \vdash e : \tau'
+            &\Gamma \vdash \tau : \kappa
+            }
+    }
+    \qquad
+    \Longrightarrow
+    \qquad
+    \vcenter{
+      \infer{\Gamma \vdash \lambda \tau. e : \tau \rightarrow \tau'}
+           {\Gamma, \tau \vdash e : \tau'[\uparrow]}
+    }
+  \]
+  Unchanged rules:
+  \[
+    \infer{\Gamma \vdash \Lambda (\alpha : \kappa).e : \forall (\alpha : \kappa).\tau}
+          {\Gamma, \alpha : \kappa \vdash e : \tau}
+    \qquad
+    \infer{\Gamma \vdash e_1 ~ e_2 : \tau'}
+          {\Gamma \vdash e_1 : \tau \rightarrow \tau'
+          &\Gamma \vdash e_2 : \tau
+          }
+  \]
+\end{judgment}
+
+Note that the lambda rule above was extrapolated by myself and not specifically covered
+in lecture. Mistakes are mine. It is known.
+
+\end{enumerate}
