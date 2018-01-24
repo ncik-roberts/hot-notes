@@ -1,0 +1,240 @@
+\sectionwithdate{Writing a typechecker for $F_\omega$}{1/18/2018}
+
+In this lecture, we rephrase the declarative syntax in the language of moded
+judgments so that we can consider matters of input and output. As before, since
+a type may admit at most one kind in $F_\omega$, much of the material introduced
+here will stay unnecessary until we have reached the singleton kind calculus.
+
+\subsection{Judgments}
+
+Here is a list of all judgments defined in today's lecture. We use a superscript $+$
+to indicate the input and a superscript $-$ to indicate the output.
+\begin{align*}
+  \Gamma^+ &\vdash e^+ \Rightarrow \tau^- &&\text{type synthesis/inference}\\
+  \Gamma^+ &\vdash e^+ \Leftarrow \tau^+ &&\text{type checking/analysis}\\
+  \Gamma^+ &\vdash c^+ \Rightarrow \kappa^- &&\text{kind synthesis}\\
+  \Gamma^+ &\vdash c^+ \Leftarrow \kappa^+ &&\text{kind checking}\\
+  \Gamma^+ &\vdash c+ \Leftrightarrow c'^+ &&\text{algorithmic equivalence}\\
+  \Gamma^+ &\vdash q_1^+ \leftrightarrow q_2^+ : \kappa^- &&\text{algorithmic path equivalence}\\
+  &c^+ \Downarrow q^- &&\text{weak-head normalization}\\
+  &c^+ \leadsto c^- &&\text{weak-head reduction}
+\end{align*}
+
+\subsection{Inference Rules}
+
+\begin{judgment}[Type synthesis]
+\[ \infer{\Gamma \vdash x \Rightarrow \tau}{\Gamma(x) = \tau} \]
+\[
+  \infer
+    {\Gamma \vdash \lambda (x : \tau).e \Rightarrow \tau \rightarrow \tau'}
+    {\Gamma \vdash \tau \Leftarrow \T
+    &\Gamma,x : \tau \vdash e \Rightarrow \tau'
+    }
+  \qquad
+  \infer
+    {\Gamma \vdash e_1~e_2 \Rightarrow \tau_2}
+    {\Gamma \vdash e_1 \Rightarrow \tau
+    &\tau \Downarrow \tau_1 \rightarrow \tau_2
+    &\Gamma \vdash e_2 \Leftarrow \tau_1
+    }
+\]
+\end{judgment}
+
+Unlike 15-317, we can synthesize the type of a lambda term since we have the type
+of the parameter specified in the term.
+In the last rule, we don't simply synthesize the type of $e_1$ and confirm that it
+is an arrow type.  This is because the type could have redexes. We instead normalize
+to $\tau_1 \rightarrow \tau_2$.\footnote{I'm still not clear on why we can rely on WHNF
+to correctly ``normalize'' when it seemed to be a theme of lecture that we cannot rely
+on this.}
+
+\begin{judgment}[Type checking]
+\[
+  \infer
+    {\Gamma \vdash e \Leftarrow \tau}
+    {\Gamma \vdash e \Rightarrow \tau'
+    &\Gamma \vdash \tau \Leftrightarrow \tau' : \T
+    }
+  \qquad
+  \infer
+    {\Gamma \vdash \Lambda (\alpha : \kappa).e \Rightarrow \forall (\alpha : \kappa).\tau}
+    {\Gamma, \alpha : \kappa \vdash e \Rightarrow \tau}
+\]
+\[
+  \infer
+    {\Gamma \vdash e[c] \Rightarrow [c/\alpha]\tau'}
+    {\Gamma \vdash e \Rightarrow \tau
+    &\tau \Downarrow \forall (\alpha : \kappa).\tau'
+    &\Gamma \vdash c \Leftarrow \kappa
+    }
+\]
+\end{judgment}
+
+We do not need to check the validity of kinds---\emph{yet} (ominously). The same footnote
+holds for the universal type.
+
+\paragraph{Algorithmic equivalence.} An option that works for $F_\omega$ is to repeatedly
+contract redeces until reaching a normalized term. However, this doesn't generalize
+to the singleton kind calculus, so we develop more machinery here.
+
+\begin{judgment}[Kind synthesis]
+  \[ \infer{\Gamma \vdash \alpha \Rightarrow \kappa}{\Gamma(\alpha) = \kappa} \]
+  \[\infer{\Gamma \vdash \lambda (\alpha : \kappa).c \Rightarrow \kappa \rightarrow \kappa'}
+         {\Gamma, \alpha : \kappa \vdash c \Rightarrow \kappa'}
+   \qquad
+   \infer{\Gamma \vdash c_1~c_2 \Rightarrow \kappa'}
+         {\Gamma \vdash c_1 \Rightarrow \kappa \rightarrow \kappa'
+         &\Gamma \vdash c_2 \Leftarrow \kappa
+         }
+  \]
+  \[
+    \infer{\Gamma \vdash \langle c_1, c_2 \rangle \Rightarrow \kappa_1 \times \kappa_2}
+      {\Gamma \vdash c_1 \Rightarrow \kappa_1
+      &\Gamma \vdash c_2 \Rightarrow \kappa_2
+      }
+    \qquad
+    \infer{\Gamma \vdash \pi_i~c \Rightarrow \kappa_i}
+      {\Gamma \vdash c \Rightarrow \kappa'
+      &\Gamma \vdash c \Rightarrow \kappa_1 \times \kappa_2
+      }
+  \]
+  \[
+    \infer{\Gamma \vdash c_1 \rightarrow c_2 \Rightarrow \T}
+      {\Gamma \vdash c_1 \Leftarrow \T
+      &\Gamma \vdash c_2 \Leftarrow \T
+      }
+    \qquad
+    \infer{\Gamma \vdash \forall(\alpha : \kappa).\tau \Rightarrow \T}
+      {\Gamma, \alpha : \kappa \vdash \tau \Leftarrow \T}
+  \]
+  \[
+    \infer[\text{(check)}]
+      {\Gamma \vdash c \Leftarrow \kappa}
+      {\Gamma \vdash c \Rightarrow \kappa'
+      &\kappa = \kappa'
+      }
+  \]
+\end{judgment}
+
+We write $\emph{(check)}$ in such a way that we can more explicitly see what we'll
+generalize when we move to other calculi, particularly the notion of equality.
+
+Now when we write the equivalence rules, think about extensionality. We recurse on the
+\emph{kind} using the appropriate projection or function application. What we \emph{don't}
+do is normalize both types and check equivalence, because this doesn't generalize to
+the singleton kind calculus.
+
+\begin{judgment}[Algorithmic equivalence]\thlabel{algequiv}
+\[ \infer
+    {\Gamma \vdash c \Leftrightarrow c' : \kappa_1 \rightarrow \kappa_2}
+    {\Gamma, \alpha : \kappa_1 \vdash c~\alpha \Leftrightarrow c'~\alpha : \kappa_2}
+  \qquad
+  \infer
+    {\Gamma \vdash c \Leftrightarrow c' : \kappa_1 \times \kappa_2}
+    {\Gamma \vdash \pi_1~c \Leftrightarrow \pi_1~c' : \kappa_1
+    &\Gamma \vdash \pi_2~c \Leftrightarrow \pi_2~c' : \kappa_2
+    }
+\]
+\[
+  \infer
+    {\Gamma \vdash c \Leftrightarrow c' : \T}
+    {c \Downarrow q
+    &c' \Downarrow q'
+    &\Gamma \vdash q \leftrightarrow q' : \T
+    }
+\]
+\end{judgment}
+We can only normalize once we reach a type kind.
+
+A normal form is such that all redeces have been contracted. However, we
+only place in \emph{weak head} normal form, where an arrow constructor or
+a universal constructor is at the outermost level. (That is, we don't recursively
+normalize.)
+
+\begin{judgment}[Weak-head normalization]
+\[
+  \infer
+    {c \Downarrow c''}
+    {c \leadsto c' & c' \Downarrow c''}
+  \qquad
+  \infer
+    {c \Downarrow c}
+    {c \not\leadsto}
+\]
+\end{judgment}
+Don't be too concerned about $c \not\leadsto$. In practice, we could implement
+this in ML by raising an exception if no reduction step is made.
+
+\begin{judgment}[Weak-head reduction]\thlabel{weak}
+\[
+  \infer{(\lambda(\alpha : \kappa).c)~c' \leadsto [c'/\alpha]c}{}
+  \qquad
+  \infer{\pi_i~\langle c_1, c_2 \rangle \leadsto c_i}{}
+\]
+\[
+  \infer{c_1~c_2 \leadsto c_1'~c_2}{c_1 \leadsto c_1'}
+  \qquad
+  \infer{\pi_i~c \leadsto \pi_i~c'}{c \leadsto c'}
+\]
+\end{judgment}
+We only reduce under an application and a projection. This is so that when we
+encounter types such as $((\lambda \alpha. \alpha)~(\lambda \alpha.\alpha))~c_3$,
+we can reduce them.
+
+The definitions for path and whnf are curiously familiar.
+\begin{bnf}
+  \text{path}~p \bnfeq
+  \alpha
+  \alt p~c
+  \alt \pi_1~p
+  \alt \pi_2~p\\
+  \text{whnf}~q \bnfeq
+  p
+  \alt c \rightarrow c
+  \alt \forall (\alpha : \kappa).c
+\end{bnf}
+Path is clearly a neutral term. Whnf is almost a neutral term, except
+the constituents (body of universal type and right/left of arrow may contain
+redeces). We have already gotten to kind $\T$, which guarantees that
+this grammar is exhaustive.
+
+Algorithmic structural equivalence should look familiar from constructive logic.
+The kind is synthesized as an output. Sometimes it is put back in as an input to
+the algorithmic equivalence judgment.
+\begin{judgment}[Algorithmic structural equivalence]
+\[
+  \infer{\Gamma \vdash \alpha \leftrightarrow \alpha : \kappa}{\Gamma(\alpha) = \kappa}
+  \qquad
+  \infer
+    {\Gamma \vdash : p~c \leftrightarrow p'~c' : \kappa_2}
+    {\Gamma \vdash p \leftrightarrow p' : \kappa_1 \rightarrow \kappa_2
+    &\Gamma \vdash c \Leftrightarrow c' : \kappa_1
+    }
+\]
+\[
+  \infer
+    {\Gamma \vdash \pi_i~p \leftrightarrow \pi_i~p' : \kappa_i}
+    {\Gamma \vdash p \leftrightarrow p' : \kappa_1 \times \kappa_2}
+  \qquad
+  \infer
+    {\Gamma \vdash (c_1 \rightarrow c_2) \leftrightarrow (c_1' \rightarrow c_2') : \T}
+    {\Gamma \vdash c_1 \Leftrightarrow c_1' : \T
+    &\Gamma \vdash c_2 \Leftrightarrow c_2' : \T
+    }
+\]
+\[
+  \infer{\Gamma \vdash \forall(\alpha : \kappa).c \leftrightarrow
+    \forall(\alpha:\kappa).c' : \T}
+    {\Gamma, \alpha : \kappa \vdash c \Leftrightarrow c' : \T}
+\]
+\end{judgment}
+
+\subsection{Introduction to de Bruijn indices}
+With explicit variables, you must be careful to avoid capture. So let's instead
+count the number of binders. Substitution coincides with shifting of the indices.
+\begin{align*}
+  &\uparrow^j_i &&\text{Add $j$ to all variables, except those bound within $i$ binders}\\
+  &\uparrow^j_i(\lambda.e) = \lambda.\uparrow^j_{i+1} e\\
+  &\uparrow^j_i k = k &&\text{if $k < i$}\\
+  &\uparrow^j_i k = k+j &&\text{otherwise}
+\end{align*}

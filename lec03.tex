@@ -1,0 +1,129 @@
+\sectionwithdate{Explicit substitution}{1/23/2018}
+
+In this lecture, we introduce a representation of substitutions as mathematical objects
+rather than resorting to meta-mathematical reasoning. We adopt the presentation of de
+Bruijn indices that will be used in the first project.
+
+\subsection{Intuition and Examples}
+
+Throughout, we use an \emph{ordered context}. As a substitution is being performed,
+variables are bound to this context. There may still be free variables whose index
+exceeds the number of items in the context; we will have to decrement the indices
+of these.
+
+Given the term (in de Bruijn indices)
+\[ (\lambda. \lambda. 2 + 0 + 3) [M/0]~~~~\text{,} \]
+it would be quite nice if this reduced to
+\[ (\lambda. \lambda. M + 0 + 2)~~~~\text{.} \]
+
+Notice again how we talk about substitution as being part of the \emph{term} and of
+being \emph{reduced}---this is the first sign that we're modeling substitution
+explicitly.
+
+The other context explored today is \emph{shifting} (or \text{lifting}), which involves
+yet more terms to the ordered context. Let's give some examples of familiar terms and
+their de Bruijn equivalents.
+\begin{align}
+  w &\vdash \lambda y. \lambda z. z+w && \Longrightarrow && \lambda.\lambda. 0 + 2\\
+  w, x & \vdash \lambda y. \lambda z. z + w && \Longrightarrow && \lambda. \lambda. 0 + 3
+\end{align}
+In (2), we must shift the index of $w$ by 1 to refer to the correct position in
+the ordered context.
+
+\subsection{Modelling substitutions explicitly}
+We model our approach after \url{http://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-54.pdf},
+taking some liberties, like indexing from 0.
+
+First, our grammar of terms:
+\begin{bnf}
+  M \bnfeq i \alt \lambda.M \alt M~M \alt M[\sigma]
+\end{bnf}
+$i$ denotes de Bruijn indices, and postfix brackets indicate substitution. Now, our grammar
+of substitutions $\sigma$.
+\begin{bnf}
+  \sigma \bnfeq M \cdot \sigma \alt \uparrow^n
+\end{bnf}
+$\cdot$ functions as cons\footnote{In lecture, we used a period ``.'', but this notation is misleadingly
+suggestive of binding.}. We usefully abbreviate $\uparrow^0$ as $\id$, and $\uparrow^1$ as
+$\uparrow$.
+
+Substitution is given meaning by equations:
+\begin{align*}
+  0[M \cdot \sigma] &= M\\
+  (i+1)[M \cdot \sigma] &= i[\sigma]\\
+  i[\uparrow^n] &= i+n\\
+  (M_1~M_2)[\sigma] &= M_1[\sigma]~M_2[\sigma]\\
+  (\lambda.M)[\sigma] &= \lambda.M[0 \cdot (\sigma \circ \uparrow)]
+\end{align*}
+
+Unlike the reference, we don't model $\circ$ as primitive but rather define it as a binary operator
+over substitutions. Our goal is for $M[\sigma \circ \sigma'] = M[\sigma][\sigma']$.
+Here's how you compute it, assuming $\cdot$ to bind tighter than $\circ$.
+\begin{align*}
+  \uparrow^m &\circ \uparrow^n &&= \uparrow^{m+n}\\
+  \id &\circ M \cdot \sigma &&= M \cdot \sigma\\
+  \uparrow^{m+1} &\circ M \cdot \sigma &&= \uparrow^n \cdot \sigma\\
+  M \cdot \sigma &\circ \sigma' &&= M[\sigma'] \cdot (\sigma \circ \sigma')
+\end{align*}
+Composition here can be pronounced ``before.'' The last rule is the only interesting one, indicating
+that later substitutions may depend on prior ones, since we must perform $M[\sigma']$.
+
+For example, we would like the following to hold:
+\begin{align*}
+  (0+1) [M \cdot \uparrow \circ \uparrow^4] &= (0+1) [M \cdot \uparrow][\uparrow^4]\\
+  &= (M + 1)[\uparrow^4]\\
+  &= M[\uparrow^4] + 5
+\end{align*}
+And by our equations, it in fact does.
+\begin{align*}
+  (0 + 1) [M \cdot \uparrow \circ \uparrow^4] &= (0 + 1) [M[\uparrow^4] \cdot (\uparrow \circ \uparrow^4)]\\
+  &= (0 + 1) [M[\uparrow^4] \cdot \uparrow^5]\\
+  &= M[\uparrow^4] + 5
+\end{align*}
+
+\subsection{Rule conversions}
+With these notions of indices and binding, we convert some rules from
+from \thref{weak} and \thref{algequiv}. Importantly, the context becomes ordered with this conversion.
+
+\begin{judgment}[Rule conversions with de Bruijn indices]
+\[
+  \vcenter{
+    \infer{(\lambda (\alpha : \kappa). c)~c' \leadsto [c'/\alpha] c}{}
+  }
+  \qquad
+  \Longrightarrow_\emph{de Bruijn}
+  \qquad
+  \vcenter{
+    \infer{(\lambda \kappa.c)~c' \leadsto c[ c' \cdot \id]}{}
+  }
+\]
+\[
+  \vcenter{
+    \infer
+      {\Gamma \vdash c \Leftrightarrow c' : \kappa_1 \rightarrow \kappa_2}
+      {\Gamma, \alpha : \kappa_1 \vdash c~\alpha \Leftrightarrow c'~\alpha : \kappa_2}
+  }
+  \qquad
+  \Longrightarrow_\emph{de Bruijn}
+  \qquad
+  \vcenter{
+    \infer
+      {\Gamma \vdash c \Leftrightarrow c' : \kappa_1 \rightarrow \kappa_2}
+      {\Gamma, \kappa_1 \vdash c[\uparrow]~0 \Leftrightarrow c'[\uparrow]~0 : \kappa_2}
+  }
+\]
+\end{judgment}
+
+\subsection{Substitutions we'll use}
+Rather than using substitutions in their full generality, we are really concerned with substitutions
+of the form $[ 0 \cdot 1 \cdots n-1 \cdot M_1[\uparrow^n] \cdots M_k[\uparrow^n] \cdot \uparrow^{n+\ell}]$.
+This is still pretty general:
+\begin{enumerate}[1.]
+  \item $[M \cdot \id]$ has $n = 0, k = 1, \ell = 0$.
+  \item $[ \uparrow^\ell ]$ has $n = 0, k = 0$.
+  \item For $\sigma$ of the desired form, the substitution $[0 \cdot (\sigma \circ \uparrow)]$ retains the form:
+    $$0 \cdot (( 0 \cdot 1 \cdots n-1 \cdot M_1[\uparrow^n] \cdots M_k[\uparrow^n] \cdot \uparrow^{n+\ell}) \circ \uparrow)$$
+    $$\Downarrow$$
+    $$0 \cdot 1 \cdots n \cdot M_1[\uparrow^{n+1}] \cdots M_k[\uparrow^{n+1}] \cdot \uparrow^{n+\ell+1}$$
+\end{enumerate}
+

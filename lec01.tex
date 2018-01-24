@@ -1,0 +1,258 @@
+\sectionwithdate{Definition of $F_\omega$}{1/16/2018}
+
+\emph{Note:} In this section we skip the na\"ive formulation given by Prof. Crary
+(without kinds) and immediately introduce kinds.
+
+First, we define type constructors. We often refer to these simply as ``constructors.''
+By convention, $\tau$ denotes a nullary constructor, but $c$ may be used in general
+without fear.
+\begin{bnf}
+  c, \tau \bnfeq
+  \alpha
+  \alt c \rightarrow c
+  \alt \forall(\alpha : \kappa). c
+  \alt \lambda(\alpha : \kappa). c
+  \alt c~c
+\end{bnf}
+
+$\alpha$ denotes a type variable. We use these in quantification and type abstraction.
+It may be instantiated during application. $\kappa$ denotes a kind, which we now
+define:
+\begin{bnf}
+  \kappa \bnfeq
+  \mathtt{type}
+  \alt \kappa \rightarrow \kappa
+\end{bnf}
+Henceforth we use $\T$ to denote \texttt{type}.
+Where would we be without terms to inhabit types?
+\begin{bnf}
+  e \bnfeq x
+  \alt \lambda(x : \tau). e
+  \alt e ~ e
+  \alt \Lambda(\alpha : \kappa). e
+  \alt e[\tau]
+\end{bnf}
+
+Our context, $\Gamma$, may contain judgments pertaining to types and terms.
+\begin{bnf}
+  \Gamma \bnfeq \varepsilon
+  \alt \Gamma, x : \tau
+  \alt \Gamma, \alpha : \kappa
+\end{bnf}
+
+Sometimes, for the latter judgment, you will see $\alpha :: \kappa$, but this is
+not too important. Proceeding from this context, we first define inductively
+the judgment that $\Gamma \vdash c : \kappa$
+
+\begin{judgment}[Type kind]\thlabel{kind}
+  $\Gamma \vdash c : \kappa$
+\[
+  \infer{\Gamma \vdash \alpha : \kappa}{\Gamma(\alpha) : \kappa}
+  \qquad
+  \infer{\Gamma \vdash c_1 \rightarrow c_2 : \T}
+        {\Gamma \vdash c_1 : \T
+        &\Gamma \vdash c_2 : \T
+        }
+  \qquad
+  \infer{\Gamma \vdash \forall(\alpha : \kappa).c : \T}
+        {\Gamma, \alpha : \kappa \vdash c : \T}
+\]
+\[
+  \infer{\Gamma \vdash c_1 ~ c_2 : \kappa'}
+        {\Gamma \vdash c_1 : \kappa \rightarrow \kappa'
+        &\Gamma \vdash c_2 : \kappa
+        }
+  \qquad
+  \infer{\Gamma \vdash \lambda(\alpha : \kappa).c : \kappa \to \kappa'}
+        {\Gamma, \alpha : \kappa \vdash c : \kappa'}
+\]
+\end{judgment}
+
+Using this judgment, we next define the judgment $\Gamma \vdash e : \tau$.
+
+\begin{judgment}[Term type]\thlabel{term}
+$\Gamma \vdash e : \tau$
+\[
+  \infer{\Gamma \vdash x : \tau}{\Gamma(x) = \tau}
+  \qquad
+  \infer{\Gamma \vdash \lambda(x : \tau).e : \tau \rightarrow \tau'}
+        {\Gamma, x : \tau \vdash e : \tau'
+        &\Gamma \vdash \tau : \kappa
+        }
+  \qquad
+  \infer{\Gamma \vdash e_1 ~ e_2 : \tau'}
+        {\Gamma \vdash e_1 : \tau \rightarrow \tau'
+        &\Gamma \vdash e_2 : \tau
+        }
+\]
+\[
+  \infer{\Gamma \vdash \Lambda (\alpha : \kappa).e : \forall (\alpha : \kappa).\tau}
+        {\Gamma, \alpha : \kappa \vdash e : \tau}
+  \qquad
+  \infer{\Gamma \vdash e[\tau] : [\tau / \alpha]\tau'}
+        {\Gamma \vdash e : \forall(\alpha : \kappa).\tau'
+        &\Gamma \vdash \tau : \kappa
+        }
+\]
+\end{judgment}
+
+But these rules aren't sufficient: if
+$f : \forall(\alpha : \T \rightarrow \T). \alpha~\int \rightarrow \unit$,
+we would want \mbox{$f[\lambda(\beta : \T).\beta]~12 : \unit$}, but
+currently this is not the case. We need a way to show
+\mbox{$(\lambda \beta. \beta) \int \equiv int$}. To do so,
+we define a new judgment:
+\[\Gamma \vdash c \equiv c' : \kappa\]
+and add to \thref{term} the inference rule
+\[\infer[(equivalence)]{\Gamma \vdash e : \tau'}
+  {\Gamma \vdash e : \tau
+  &\Gamma \vdash \tau \equiv \tau' : \T
+  }
+\]
+
+\begin{judgment}[Equivalence]\thlabel{equiv}
+$\Gamma \vdash c \equiv c' : \kappa$
+
+Equivalence rules
+\[
+  \infer{\Gamma \vdash c \equiv c : \kappa}{\Gamma \vdash c : \kappa}
+  \qquad
+  \infer{\Gamma \vdash c' \equiv c : \kappa}{\Gamma \vdash c \equiv c' : \kappa}
+  \qquad
+  \infer{\Gamma \vdash c_1 \equiv c_3 : \kappa}
+        {\Gamma \vdash c_1 \equiv c_2 : \kappa
+        &\Gamma \vdash c_2 \equiv c_3 : \kappa
+        }
+\]
+
+Compatibility rules
+\[
+  \infer{\Gamma \vdash (c_1 \rightarrow c_2) \equiv (c_1' \rightarrow c_2') : \T}
+        {\Gamma \vdash c_1 \equiv c_1' : \T
+        &\Gamma \vdash c_2 \equiv c_2' : \T
+        }
+  \qquad
+  \infer{\Gamma \vdash \forall(\alpha : \kappa).c \equiv \forall(\alpha : \kappa).c' : \T}
+        {\Gamma, \alpha : \kappa \vdash c \equiv c' : \T}
+\]
+\[
+  \infer{\Gamma \vdash \lambda(\alpha : \kappa).c \equiv
+          \lambda (\alpha : \kappa.c') \equiv \kappa \rightarrow \kappa'}
+       {\Gamma, \alpha : \kappa \vdash c \equiv c' : \kappa'}
+  \qquad
+  \infer{\Gamma \vdash c_1 ~ c_2 \vdash c_1'~c_2' : \kappa'}
+        {\Gamma \vdash c_1 \equiv c_1' : \kappa \rightarrow \kappa'
+        &\Gamma \vdash c_2 \equiv c_2' : \kappa
+        }
+\]
+\end{judgment}
+These rules defined a congruence relation. We haven't yet added the interesting rules.
+Note the enforcement that some constructors be types ($\T$), since they certainly
+may not be $\lambda$-abstractions. At this point in the semester, the $\kappa$ constraints
+may be omitted, since they are uniquely determined by the \textbf{regularity conditions}
+(assuming $\vdash \Gamma~\mathsf{ok}$):
+\begin{itemize}
+  \item If $\Gamma \vdash c_1 \equiv c_2 : \kappa$, then $\Gamma \vdash c_1 : \kappa$
+    and $\Gamma \vdash c_2 : \kappa$.
+  \item If $\Gamma \vdash e : \tau$, then $\Gamma \vdash \tau : \T$.
+\end{itemize}
+
+Now for a more interesting rules to add to \thref{equiv}:
+\[
+  \infer[(\beta)]
+    {\Gamma \vdash (\lambda (\alpha : \kappa). c') c \equiv [c / \alpha]c' : \kappa'}
+    {\Gamma \vdash c : \kappa
+    & \Gamma, \alpha : \kappa \vdash c' : \kappa'
+    }
+\]
+We can prove:
+\[
+  \infer
+    {(\lambda \beta. \beta)~\int \rightarrow \unit \equiv \int \rightarrow \unit : \T}
+    {\infer
+       {(\lambda \beta. \beta)~\int \equiv \int : \T}
+       {\infer{\beta : \T \vdash \beta : \T}{}
+       &\infer{\int : \T}{}
+       }
+    }
+\]
+
+What about $\eta$-expansion? something along the lines of:
+\[
+  \infer[(\eta)]
+    {\Gamma \vdash c \equiv \lambda (\alpha : \kappa). c~\alpha : \kappa \rightarrow \kappa'}
+    {\Gamma \vdash c : \kappa \rightarrow \kappa'}
+\]
+
+We want something more general, akin to running an experiment on two constructors of
+function kind. (Adding to \thref{equiv}.)
+\[
+  \infer[(extensionality)]
+    {\Gamma \vdash c_1 \equiv c_2 : \kappa \rightarrow \kappa'}
+    {\Gamma, \alpha : \kappa \vdash c_1~\alpha \equiv c_2~\alpha : \kappa'}
+\]
+
+Exercise: prove $\eta$ from this rule.
+
+\subsection{$F_\omega$ plus products}
+\begin{bnf}
+  \kappa \bnfeq
+    \cdots \alt \kappa \times \kappa\\
+  c \bnfeq \cdots \alt \langle c, c \rangle
+  \alt \pi_1~c
+  \alt \pi_2~c
+\end{bnf}
+
+Adding to \thref{kind}:
+\[
+  \infer{\Gamma \vdash \langle c_1, c_2 \rangle : \kappa_1 \times \kappa_2}
+    {\Gamma \vdash c_1 : \kappa_1
+    &\Gamma \vdash c_2 : \kappa_2
+    }
+  \qquad
+  \infer{\Gamma \vdash \pi_i~c:\kappa_i}
+    {\Gamma \vdash c : \kappa_1 \times \kappa_2}
+\]
+
+Adding to \thref{equiv}, the compatability rules:
+\[
+  \infer{\Gamma \vdash \langle c_1, c_2 \rangle \equiv \langle c_1', c_2' \rangle
+    : \kappa_1 \times \kappa_2}
+    {\Gamma \vdash c_1 \equiv c_1' : \kappa' & \Gamma \vdash c_2 \equiv c_2' : \kappa_2}
+  \qquad
+ \infer{\Gamma \vdash \pi_i~c_1 \equiv \pi_i~c_2 : \kappa_i}
+   {\Gamma \vdash c_1 \equiv c_2 : \kappa_1 \times \kappa_2}
+\]
+
+Adding to \thref{equiv}, the ``interesting'' rules:
+\[
+  \infer[(\beta_\pi)]
+    {\Gamma \vdash \pi_1 \langle c_1, c_2 \rangle \equiv c_1 : \kappa_i}
+    {\Gamma \vdash c_1 : \kappa_1 & \Gamma \vdash c_2 : \kappa_2}
+  \qquad
+  \infer[(extensionality_\pi)]
+    {\Gamma \vdash c_1 \equiv c_2 : \kappa_1 \times \kappa_2}
+    {\Gamma \vdash \pi_i~c_1 \equiv \pi_i~c_2 : \kappa_i}
+\]
+
+\subsection{Motivation}
+All of this is useful in the understanding of ML's module system. For example, we wish to
+view the type components of a module as a singular type componen\emph{ent}, for which we
+must understand a pair of types. Furthermore, functors may be seen as creating type constructors,
+for example:
+
+\begin{verbatim}
+functor Foo (type t) = struct
+  type u = t * t
+end
+\end{verbatim}
+which may be represented as $\lambda (t:\T) \langle t \times t, \ldots \rangle$.
+
+\subsection{Remarks}
+\begin{itemize}
+  \item We must specify a separate level (kinds) rather than just describing types with types;
+    this is described in the
+    \href{https://en.wikipedia.org/wiki/Burali-Forti_paradox}{Burali-Forti paradox}.
+  \item Counting binders from the inside-out is called de Brujin indices, but counting from
+    the outside-in is called de Brujin \emph{levels}, which ``no one uses.''
+\end{itemize}

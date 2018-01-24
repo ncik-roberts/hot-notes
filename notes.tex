@@ -1,0 +1,83 @@
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[a4paper, 11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{theoremref}
+\usepackage{enumerate}
+\usepackage{environ}
+\usepackage{hyperref}
+
+\usepackage[protrusion=true,expansion=true]{microtype} % Better typography
+
+\usepackage{mathpazo} % Use the Palatino font
+\usepackage[T1]{fontenc} % Required for accented characters
+\linespread{1.05} % Change line spacing here, Palatino benefits from a slight increase by default
+
+\DeclareMathOperator{\id}{id}
+
+\makeatletter
+
+% Customize the title
+\renewcommand{\maketitle}{
+  \noindent{\LARGE\@title}
+  \vspace{10pt} % Some vertical space between the title and author name
+
+  \noindent{\@author} % Author name
+  \\
+  Last built: \@date % Date
+  \vspace{5pt}% Some vertical space between the author block and abstract
+}
+
+%--------------------------
+%   417-specific things
+%--------------------------
+\usepackage{proof}
+
+% Convenient way to specify date for each lecture
+\newcommand{\sectionwithdate}[2]{
+  \section{#1 \hfill {\small \textnormal{\emph{(#2)}}}}
+}
+
+\NewEnviron{bnf}{
+  \begin{align*}
+    \BODY
+  \end{align*}\ignorespacesafterend
+}
+
+\newcommand{\alt}{\; \mid \;}
+\newcommand{\altline}{\\&\mid \;}
+\newcommand{\bnfeq}{~~&::=~~}
+
+\renewcommand{\int}{\mathtt{int}}
+\newcommand{\unit}{\mathtt{unit}}
+\newcommand{\T}{\mathtt{T}}
+
+%-----------------------
+%  Judgment
+%-----------------------
+\newtheorem{judgment}{Judgment}[section]
+
+%----------------------------------------------------------------------------------------
+%	TITLE
+%----------------------------------------------------------------------------------------
+
+\title{15-417 HOT Compilation (Spring 2018)}
+
+\author{Nick Roberts % Author
+\\{\textit{Carnegie Mellon University}}} % Institution
+
+\date{\today} % Date
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+\maketitle % Print the title section
+
+\input{lec01}
+\include{lec02}
+\include{lec03}
+
+\end{document}
