@@ -100,7 +100,7 @@ But these rules aren't sufficient: if
 $f : \forall(\alpha : \T \rightarrow \T). \alpha~\int \rightarrow \unit$,
 we would want \mbox{$f[\lambda(\beta : \T).\beta]~12 : \unit$}, but
 currently this is not the case. We need a way to show
-\mbox{$(\lambda \beta. \beta) \int \equiv int$}. To do so,
+\mbox{$(\lambda \beta. \beta) \int \equiv \int$}. To do so,
 we define a new judgment:
 \[\Gamma \vdash c \equiv c' : \kappa\]
 and add to \thref{term} the inference rule
