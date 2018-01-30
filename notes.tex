@@ -51,9 +51,11 @@
 \newcommand{\altline}{\\&\mid \;}
 \newcommand{\bnfeq}{~~&::=~~}
 
-\renewcommand{\int}{\mathtt{int}}
-\newcommand{\unit}{\mathtt{unit}}
-\newcommand{\T}{\mathtt{T}}
+\renewcommand{\int}{\textnormal{\texttt{int}}}
+\newcommand{\unit}{\textnormal{\texttt{unit}}}
+\newcommand{\T}{\textnormal{\texttt{T}}} % Type kind
+\renewcommand{\S}{\textnormal{\texttt{S}}} % Singleton kind
+\newcommand{\kind}{\textnormal{kind}} % Singleton kind
 
 %-----------------------
 %  Judgment
@@ -80,5 +82,6 @@
 \input{lec01}
 \include{lec02}
 \include{lec03}
+\include{lec04}
 
 \end{document}

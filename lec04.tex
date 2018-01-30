@@ -1,0 +1,184 @@
+\sectionwithdate{Singleton Kind Calculus}{1/25/2018}
+
+\subsection{Remarks from previous lecture}
+\begin{itemize}
+  \item Although in the previous section I treated $M[\sigma]$ as a term, Prof\@. Crary
+    wanted to present it as an operation on terms.
+  \item $M \cdot \uparrow^k \equiv M \cdot k \cdot k+1 \cdot \cdots$
+\end{itemize}
+
+\subsection{Toward the Singleton Kind Calculus}
+Starting with $F_\omega$ + products, let's add one more kind scheme.
+\begin{bnf}
+  \kappa \bnfeq \T
+  \alt \kappa \to \kappa
+  \alt \kappa \times \kappa
+  \alt \S(c)
+\end{bnf}
+From a set-theoretic point of view, $\S(c)$ is the singleton set $\{ c \}$, but we of
+course look down on set theory, so don't go too far with this.
+
+For sure, $\int : \S(\int)$. But we also want that $(\lambda \alpha. \alpha)~\int : \S(\int)$.
+(The kind of the parameter $\alpha$ was unspecified in class, but it seems that we want
+to allow $\alpha : \T$ in addition to the obvious $\alpha : \S(\int)$.)
+
+Let's review the components of a basic ML signature:
+\begin{verbatim}
+    type t
+    type u
+    val a : t
+\end{verbatim}
+The type component of this signature is $\alpha : \T \times \T$, and the value component
+is $a : \pi_2~\alpha$. In an explicit, made-up ML syntax, this would look like:
+\begin{verbatim}
+    typeconstructor t : type
+    typeconstructor u : type
+    val a : t
+\end{verbatim}
+
+This is nice and breezy, but what happens if we need to introduce sharing constraints
+between types? The classic example of the non-geopolitical Diamond Import Problem is where
+a lexer and parser signature both reference a symbol table module.
+A compiler, needing to make use of both a lexer and a parser, must specify that its lexer
+and parser don't deviate in symbol table.  
+(A remark was made that Haskell solves this using ``sharing by construction (parameterization),''
+in contrast to the ML orthodoxy's ``sharing by specification (fibration).''
+There are category-theoretical implications to this all, believe it or not. I don't.)
+
+A complication: how to kind $\lambda(\alpha: \T). \int$? Surely it's $\T \to \T$,
+but also it's $\T \to \S(\int)$. Fine, but what about $\lambda(\alpha : \T) : \alpha$?
+Again, $\T \to \T$ should groove, but we have no way to assign the kind $\T \to \S(?)$.
+This formulation doesn't appear to be entirely satisfactory, so let's nix it and throw
+dependent kinds into the mix.
+
+\subsection{Dependent kinds}
+We instead adopt this grammar of kinds.
+\begin{bnf}
+  \kappa \bnfeq \T
+  \alt \Pi (\alpha : \kappa). \kappa
+  \alt \Sigma (\alpha : \kappa). \kappa
+  \alt \S(c)
+\end{bnf}
+
+Somehow, we want to set this up so:
+\begin{align*}
+  \lambda(\alpha : \T) . \alpha &: \Pi(\alpha : \T) . T\\
+                &: \Pi(\alpha : \T) . \S(\alpha)
+\end{align*}
+where the second option is clearly the best. So good that no other type has that kind.
+
+Arrows (exponentiation) are iterated products; pairs (products) are iterated sums.
+We can still retain the old notation where there is no dependence.
+Where we would say $\langle \int, \int\rangle : \T\times\T$ before, we now say
+\mbox{$\langle \int, \int \rangle : \Sigma(\alpha : \T). \S(\alpha)$}, and eruditely.
+
+For a signature with kind $\Sigma(\texttt{t} : \S(\int)) . \S(\texttt{t} \times \texttt{t})$,
+look no further than
+\begin{verbatim}
+     type t = int
+     type u = t * t
+\end{verbatim}
+
+But we impugn kinds with dependence.
+It's possible for a kind to be bad, so we resort to the usual
+interrogation tactics.
+\begin{judgment}[Innocence of kinds]
+  $\Gamma \vdash \kappa : \kind$
+  \[
+    \infer{\Gamma \vdash \T : \kind}{}
+    \qquad
+    \infer{\Gamma \vdash \S(\tau) : \kind}
+      {\Gamma \vdash \tau : \T}
+  \]
+  \[
+    \infer{\Gamma \vdash \Pi(\alpha:\kappa_1).\kappa_2 : \kind}
+      {\Gamma \vdash \kappa_1 : \kind
+      &\Gamma, \alpha : \kappa_1 \vdash \kappa_2 : \kind
+      }
+    \qquad
+    \infer{\Gamma \vdash \Sigma(\alpha:\kappa_1).\kappa_2 : \kind}
+      {\Gamma \vdash \kappa_1 : \kind
+      &\Gamma, \alpha : \kappa_1 \vdash \kappa_2 : \kind
+      }
+  \]
+\end{judgment}
+
+\subsection{Equivalence in kind}
+Before, in the judgment $\Gamma \vdash c_1 \equiv c_2 : \kappa$, neither the context
+$\Gamma$ nor the kind $\kappa$ was needed. But, just as Mercury
+casts capricious shadows on the surface of Mars, so too introduces the fallen
+kind new pathways to deceit. Dependent, yes---dependent on sin.
+\[\lambda(\alpha : \T).\alpha \stackrel{?}{\equiv} \lambda(\alpha:\T).\int\]
+
+At $\T \to \T$, no. At $\S(\int) \to \T$, yeah. Subkinding helps:
+$\S(\int) \to \T \ge \T \to \T$. The kind $\kappa$ is necessary to check
+equivalence. The context is clearly necessary for dependent
+kinds, and I don't feel like reproducing the example from lecture.
+
+Here, our declarative judgments:
+\begin{align*}
+  \Gamma &\vdash \kappa : \kind &&\text{kind checking (done!)}\\
+  \Gamma &\vdash \kappa_1 \equiv \kappa_2 : \kind &&\text{kind equivalence}\\
+  \Gamma &\vdash \kappa_1 \le \kappa_2 &&\text{subkinding}\\
+  \Gamma &\vdash c : \kappa &&\text{kind checking for types}\\
+  \Gamma &\vdash c_1 \equiv c_2 : \kappa &&\text{type equivalence at a kind}\\
+  \hline
+  \Gamma &\vdash e : c &&\text{terms}\\
+  &\vdash \Gamma~\mathsf{ok} &&\text{context ok-ness}
+\end{align*}
+
+Above the line is where the action is. Below, unchanged.
+Let's briefly state regularity conditions. If $\vdash \Gamma~\mathsf{ok}$, then:
+\begin{enumerate}[(i)]
+  \item if $\Gamma \vdash \kappa \equiv \kappa' : \kind$, then $\Gamma \vdash \kappa : \kind$
+    and $\Gamma \vdash \kappa : \kind$.
+  \item if $\Gamma \vdash \kappa \le \kappa'$, then $\Gamma \vdash \kappa : \kind$
+    and $\Gamma \vdash \kappa : \kind$.
+  \item if $\Gamma \vdash c : \kappa$, then $\Gamma \vdash \kappa : \kind$.
+  \item if $\Gamma \vdash c \equiv c' : \kappa$, then $\Gamma \vdash c : \kappa$
+    and $\Gamma \vdash c' : \kappa$.
+  \item if $\Gamma \vdash e : \tau$, then $\Gamma \vdash \tau : \T$.
+\end{enumerate}
+
+We start with defining kind checking for types.
+\begin{judgment}[Kind checking for types]
+  $\Gamma \vdash c : \kappa$
+  \[
+    \infer{\Gamma \vdash \alpha : \kappa}{\Gamma(\alpha) = \kappa}
+  \]
+  \[
+    \infer{\Gamma \vdash \lambda(\alpha : \kappa).c : \Pi(\alpha : \kappa).\kappa'}
+      {\Gamma \vdash \kappa : \kind
+      &\Gamma, \alpha : \kappa \vdash c : \kappa'
+      }
+    \qquad
+    \infer{\Gamma \vdash c_1~c_2 : [c_2 / \alpha]\kappa'}
+      {\Gamma \vdash c_1 : \Pi(\alpha:\kappa).\kappa'
+      &\Gamma \vdash c_2 : \kappa
+      }
+  \]
+  \[
+    \infer{\Gamma \vdash \langle c_1, c_2 \rangle : \Sigma(\alpha : \kappa_1).\kappa_2}
+      {\Gamma, \alpha : \kappa_1 \vdash \kappa_2 : \kind
+      &\Gamma \vdash c_1 : \kappa_1
+      &\Gamma \vdash c_2 : [c_1/\alpha]\kappa_2
+      }
+  \]
+\end{judgment}
+In the elimination rule for dependent products, $\kappa$ and $\kappa'$ live under a different
+number of binders. Watch out when implementing de Bruijn indices.
+
+That the dependent sum is dual to the dependent product is to be expected, and is
+``standard for dependent types.'' This is not entirely satisfactory, so hopefully more
+exposure to this notion will make this clear. (Presumably, $\pi_1$ and $\pi_2$ are
+still eliminatory for dependent sums, but this went unmentioned.)
+
+\subsection{Remarks}
+\begin{itemize}
+\item Why can't the declaration \texttt{type t = int} be interpreted as introducing an
+  alias for the type $\int$? Prof\@. Crary's explanation was that the signature with this
+  binding is a subkind of the signature specifying only \texttt{type t}, and that the
+  alias interpretation is not satisfactory in this regard.
+\item For more on the Diamond Import Problem, see Pierce's \emph{Advanced Topics in Types and
+  Programming Languages}.
+\end{itemize}
