@@ -40,7 +40,7 @@ This is nice and breezy, but what happens if we need to introduce sharing constr
 between types? The classic example of the non-geopolitical Diamond Import Problem is where
 a lexer and parser signature both reference a symbol table module.
 A compiler, needing to make use of both a lexer and a parser, must specify that its lexer
-and parser don't deviate in symbol table.  
+and parser don't deviate in symbol table.
 (A remark was made that Haskell solves this using ``sharing by construction (parameterization),''
 in contrast to the ML orthodoxy's ``sharing by specification (fibration).''
 There are category-theoretical implications to this all, believe it or not. I don't.)
@@ -82,7 +82,7 @@ look no further than
 But we impugn kinds with dependence.
 It's possible for a kind to be bad, so we resort to the usual
 interrogation tactics.
-\begin{judgment}[Innocence of kinds]
+\begin{judgment}[Innocence of kinds (kind formation)]
   $\Gamma \vdash \kappa : \kind$
   \[
     \infer{\Gamma \vdash \T : \kind}{}
@@ -117,13 +117,13 @@ kinds, and I don't feel like reproducing the example from lecture.
 
 Here, our declarative judgments:
 \begin{align*}
-  \Gamma &\vdash \kappa : \kind &&\text{kind checking (done!)}\\
+  \Gamma &\vdash \kappa : \kind &&\text{kind formation (done!)}\\
   \Gamma &\vdash \kappa_1 \equiv \kappa_2 : \kind &&\text{kind equivalence}\\
   \Gamma &\vdash \kappa_1 \le \kappa_2 &&\text{subkinding}\\
-  \Gamma &\vdash c : \kappa &&\text{kind checking for types}\\
-  \Gamma &\vdash c_1 \equiv c_2 : \kappa &&\text{type equivalence at a kind}\\
+  \Gamma &\vdash c : \kappa &&\text{type formation}\\
+  \Gamma &\vdash c_1 \equiv c_2 : \kappa &&\text{type equivalence}\\
   \hline
-  \Gamma &\vdash e : c &&\text{terms}\\
+  \Gamma &\vdash e : c &&\text{term formation}\\
   &\vdash \Gamma~\mathsf{ok} &&\text{context ok-ness}
 \end{align*}
 
@@ -141,7 +141,7 @@ Let's briefly state regularity conditions. If $\vdash \Gamma~\mathsf{ok}$, then:
 \end{enumerate}
 
 We start with defining kind checking for types.
-\begin{judgment}[Kind checking for types]
+\begin{judgment}[Type formation (incomplete)]
   $\Gamma \vdash c : \kappa$
   \[
     \infer{\Gamma \vdash \alpha : \kappa}{\Gamma(\alpha) = \kappa}
@@ -167,6 +167,11 @@ We start with defining kind checking for types.
 \end{judgment}
 In the elimination rule for dependent products, $\kappa$ and $\kappa'$ live under a different
 number of binders. Watch out when implementing de Bruijn indices.
+
+The regularity condition in the premise of the dependent sum rule is required.
+For example, if $\gamma : \S(\int) \to \T$, the substitution of a type constructor for $\gamma$
+in $\langle \int, \gamma~\int\rangle$ will appear to license the kind $\Sigma(\alpha:\T).\S(\gamma~\alpha)$,
+but this in fact should not be the case.
 
 That the dependent sum is dual to the dependent product is to be expected, and is
 ``standard for dependent types.'' This is not entirely satisfactory, so hopefully more
