@@ -120,8 +120,8 @@ Here, our declarative judgments:
   \Gamma &\vdash \kappa : \kind &&\text{kind formation (done!)}\\
   \Gamma &\vdash \kappa_1 \equiv \kappa_2 : \kind &&\text{kind equivalence}\\
   \Gamma &\vdash \kappa_1 \le \kappa_2 &&\text{subkinding}\\
-  \Gamma &\vdash c : \kappa &&\text{type formation}\\
-  \Gamma &\vdash c_1 \equiv c_2 : \kappa &&\text{type equivalence}\\
+  \Gamma &\vdash c : \kappa &&\text{constructor formation}\\
+  \Gamma &\vdash c_1 \equiv c_2 : \kappa &&\text{constructor equivalence}\\
   \hline
   \Gamma &\vdash e : c &&\text{term formation}\\
   &\vdash \Gamma~\mathsf{ok} &&\text{context ok-ness}
@@ -141,7 +141,7 @@ Let's briefly state regularity conditions. If $\vdash \Gamma~\mathsf{ok}$, then:
 \end{enumerate}
 
 We start with defining kind checking for types.
-\begin{judgment}[Type formation (incomplete)]
+\begin{judgment}[Constructor formation (incomplete)]\thlabel{sgk:type}
   $\Gamma \vdash c : \kappa$
   \[
     \infer{\Gamma \vdash \alpha : \kappa}{\Gamma(\alpha) = \kappa}

@@ -1,0 +1,292 @@
+\sectionwithdate{Close Encounters of the Singleton Kind}{1/30/2018}
+
+As an introduction to this lecture, we extend \thref{sgk:type} with more rules.
+\begin{judgment}[Constructor formation (still incomplete)]\thlabel{sgk:incomplete}
+  $\Gamma \vdash c : \kappa$
+  \[
+    \infer{\Gamma \vdash \alpha : \kappa}{\Gamma(\alpha) = \kappa}
+  \]
+  \[
+    \infer{\Gamma \vdash \lambda(\alpha : \kappa).c : \Pi(\alpha : \kappa).\kappa'}
+      {\Gamma \vdash \kappa : \kind
+      &\Gamma, \alpha : \kappa \vdash c : \kappa'
+      }
+    \qquad
+    \infer{\Gamma \vdash c_1~c_2 : [c_2 / \alpha]\kappa'}
+      {\Gamma \vdash c_1 : \Pi(\alpha:\kappa).\kappa'
+      &\Gamma \vdash c_2 : \kappa
+      }
+  \]
+  \[
+    \infer{\Gamma \vdash \langle c_1, c_2 \rangle : \Sigma(\alpha : \kappa_1).\kappa_2}
+      {\Gamma, \alpha : \kappa_1 \vdash \kappa_2 : \kind
+      &\Gamma \vdash c_1 : \kappa_1
+      &\Gamma \vdash c_2 : [c_1/\alpha]\kappa_2
+      }
+    \qquad
+  \]
+  \[
+    \infer{\Gamma \vdash \pi_1~c : \kappa_1}
+      {\Gamma \vdash c : \Sigma (\alpha : \kappa_1).\kappa_2}
+    \qquad
+    \infer{\Gamma \vdash \pi_2~c : [\pi_1~c/\alpha]\kappa_2}
+      {\Gamma \vdash c : \Sigma (\alpha : \kappa_1).\kappa_2}
+  \]
+Same as before:
+  \[
+    \infer{\Gamma \vdash c_1 \to c_2 : \T}{\Gamma \vdash c_1 : \T & \Gamma \vdash c_2 : \T}
+    \qquad
+    \infer{\Gamma \vdash \forall(\alpha:\kappa).c : \T}
+      {\Gamma \vdash \kappa : \kind
+      &\Gamma, \alpha : \kappa \vdash c : \T
+      }
+    \qquad
+    \infer{\Gamma \vdash c : \S(c)}
+      {\Gamma \vdash c : \T}
+  \]
+\end{judgment}
+We will add more rules to this as we go.
+
+\subsection{Higher-order singletons}
+With no effort, we can say $\int : \S(\int)$. However, we have no notion
+of $\lst : \S(\lst)$, even though we can encode this as the judgment
+$\lst : \Pi(\alpha : \T). \S(\lst~\alpha)$, where the kind on the RHS
+uniquely determines the type.
+
+\paragraph{Higher-order singleton. (Defined notion.)}
+\begin{align*}
+  \S(c : \T) &= \S(c)\\
+  \S(c : \Pi(\alpha : \kappa_1).\kappa_2) &= \Pi(\alpha : \kappa_1).\S(c~\alpha : \kappa_2)\\
+  \S(c : \Sigma(\alpha : \kappa_1).\kappa_2) &=
+    \S(\pi_1~c : \kappa_1) \times \S(\pi_2~c : [\pi_1~c/\alpha]\kappa_2)\\
+  \S(c : \S(c')) &= \S(c)
+\end{align*}
+It is for ease of proof that we write the third rule non-dependently and the
+fourth rule as resolving to $c$ instead of $c'$. The third rule might be nicer in a
+de Bruijn setting, since there is no shifting involved with it.
+
+You might like the rules \thref{sgk:incomplete} in their current form, but
+these rules aren't sufficient to prove seemingly-trivial theorems. For example,
+
+\[ \infer{\lst : \Pi(\alpha : \T). \S(\lst~\alpha)}
+    {\lst : \T \to \T
+    &\deduce{\T \to \T \le \Pi(\alpha : \T) . \S(\lst~\alpha)}{\textcolor{red}{\times}}
+    }
+\]
+Therefore, we need something like $\eta$-expansion, which we have by convention
+called extensionality rules. In addition to \thref{sgk:incomplete}, we add the rules:
+\begin{judgment}[Constructor formation (extensionality)]\thlabel{sgk:extensionality}
+  \[
+    \infer{\Gamma \vdash c : \Pi(\alpha : \kappa_1).\kappa_2}
+      {\Gamma, \alpha : \kappa_1 \vdash c~\alpha : \kappa_2
+      &\Gamma \vdash \kappa_1 : \kind
+      }
+    \qquad
+    \infer{\Gamma \vdash c : \Sigma(\alpha : \kappa_1).\kappa_2}
+      {\Gamma \vdash \pi_1~c : \kappa_1
+      &\Gamma \vdash \pi_2~c : [\pi_1~c/\alpha]\kappa_2
+      &\Gamma, \alpha : \kappa_1 \vdash \kappa_2 : \kind
+      }
+  \]
+\end{judgment}
+
+We need these rules to show that:
+\begin{align*}
+  \text{If} \quad \Gamma \vdash c : \kappa \quad \text{and} \quad &\vdash \Gamma~\mathsf{ok},\\
+  \text{then} \quad \Gamma &\vdash \S(c : \kappa) : \kind\\
+  \text{and} \quad \Gamma &\vdash c : \S(c : \kappa)
+\end{align*}
+
+\begin{judgment}[Kind equivalence (boring)]
+  \[
+    \infer{\Gamma \vdash \kappa \equiv \kappa : \kind}{\Gamma \vdash \kappa : \kind}
+    \qquad
+    \infer{\Gamma \vdash \kappa \equiv \kappa' : \kind}
+          {\Gamma \vdash \kappa' \equiv \kappa : \kind}
+    \qquad
+    \infer{\Gamma \vdash \kappa_1 \equiv \kappa_3 : \kind}
+          {\Gamma \vdash \kappa_1 \equiv \kappa_2 : \kind
+          &\Gamma \vdash \kappa_2 \equiv \kappa_3 : \kind
+          }
+  \]
+  \[
+    \infer{\Gamma \vdash \S(c) \equiv \S(c') : \kind}
+          {\Gamma \vdash c \equiv c' : \T}
+    \qquad
+    \infer{
+      \deduce
+        {\Gamma \vdash \Pi(\alpha : \kappa_1).\kappa_2 \equiv
+          \Pi(\alpha : \kappa_1').\kappa_2' : \kind}
+        {\Gamma \vdash \Sigma(\alpha : \kappa_1).\kappa_2 \equiv
+          \Sigma(\alpha : \kappa_1').\kappa_2' : \kind}}
+      {\Gamma \vdash \kappa_1 \equiv \kappa_1' : \kind
+      &\Gamma, \alpha : \kappa_1 \vdash \kappa_2 \equiv \kappa_2' : \kind
+      }
+  \]
+\end{judgment}
+
+\begin{judgment}[Subkinding]\mbox{}\\
+Preorder:
+  \[
+    \infer{\Gamma \vdash \kappa \le \kappa'}
+      {\Gamma \vdash \kappa \equiv \kappa' : \kind}
+    \qquad
+    \infer{\Gamma \vdash \kappa_1 \le \kappa_3}
+      {\Gamma \vdash \kappa_1 \le \kappa_2
+      &\Gamma \vdash \kappa_2 \le \kappa_3
+      }
+  \]
+Other:
+  \[
+    \infer{\Gamma \vdash \S(c) \le \T}{\Gamma \vdash c : \T}
+  \]
+  \[
+    \infer
+      {\Gamma \vdash \Pi(\alpha : \kappa_1).\kappa_2 \le \Pi(\alpha : \kappa_1') . \kappa_2'}
+      {\Gamma \vdash \kappa_1' \le \kappa_1
+      &\Gamma, \alpha : \kappa_1' \vdash \kappa_2 \le \kappa_2'
+      &\Gamma, \alpha : \kappa_1 \vdash \kappa_2 : \kind
+      }
+  \]
+  \[
+    \infer
+      {\Gamma \vdash \Sigma(\alpha : \kappa_1).\kappa_2 \le \Sigma(\alpha : \kappa_1').\kappa_2'}
+      {\Gamma \vdash \kappa_1 \le \kappa_1'
+      &\Gamma, \alpha : \kappa_1 \vdash \kappa_2 \le \kappa_2'
+      &\Gamma, \alpha : \kappa_1' \vdash \kappa_2' : \kind
+      }
+  \]
+\end{judgment}
+The rule for $\Pi$ reminds us that functions are contravariant in the domain and
+covariant in the codomain. Notice that we choose the more specific $\alpha : \kappa_1'$
+when checking $\kappa_2 \le \kappa_2'$; this is because the wider $\kappa_1$ would not make sense
+in $\kappa_2$. But that's why we still must check the validity of $\alpha : \kappa_1$
+in $\kappa_2$.
+
+From these subsumption rules, we can derive a few useful results:
+\[
+  \infer
+    {\Gamma \vdash \S(c) \le \S(c')}
+    {\Gamma \vdash c \equiv c' : \T}
+  \qquad
+  \infer
+    {\Gamma \vdash c : \S(c')}
+    {\Gamma \vdash c \equiv c' : \T}
+\]
+
+\begin{judgment}[Constructor equivalence]\mbox{}\\
+Equivalence relation:
+  \[
+    \infer{\Gamma \vdash c \equiv c : \kappa}{\Gamma \vdash c : \kappa}
+    \qquad
+    \infer{\Gamma \vdash c' \equiv c : \kappa}{\Gamma \vdash c \equiv c'}
+    \qquad
+    \infer{\Gamma \vdash c_1 \equiv c_3 : \kappa}
+      {\Gamma \vdash c_1 \equiv c_2 : \kappa
+      &\Gamma \vdash c_2 \equiv c_3 : \kappa
+      }
+  \]
+Compatability rules:
+  \[
+    \infer{\Gamma \vdash \lambda(\alpha : \kappa_1).c \equiv \lambda(\alpha : \kappa_1').c'
+      : \Pi(\alpha : \kappa_1).\kappa_2}
+      {\Gamma \vdash \kappa_1 \equiv \kappa_1' : \kind
+      &\Gamma, \alpha : \kappa_1 \vdash c \equiv c' : \kappa_2
+      }
+    \qquad
+    \infer{\Gamma \vdash c_1~c_2 \equiv c_1'~c_2' : [c_2/\alpha]\kappa_2}
+      {\Gamma \vdash c_1 \equiv c_1' : \Pi(\alpha : \kappa_1).\kappa_2
+      &\Gamma \vdash c_2 \equiv c_2' : \kappa_2
+      }
+  \]
+  \[
+    \infer{\Gamma \vdash \langle c_1, c_2 \rangle \equiv \langle c_1', c_2' \rangle
+      : \Sigma(\alpha : \kappa_1).\kappa_2}
+      {\Gamma \vdash c_1 \equiv c_1' : \kappa_1
+      &\Gamma \vdash c_2 \equiv c_2' : [c_1 / \alpha]\kappa_2
+      }
+    \qquad
+    \infer{
+      \deduce
+         {\Gamma \vdash \pi_2~c \equiv \pi_2 c' : [\pi_1~c/\alpha]\kappa_2}
+         {\Gamma \vdash \pi_1~c \equiv \pi_1 c' : \kappa_1}
+      }
+      {\Gamma \vdash c \equiv c' : \Sigma(\alpha : \kappa_1).\kappa_2}
+  \]
+  Type constructor rules:
+  \[
+    \infer[(\beta)]
+      {\Gamma \vdash (\lambda (\alpha : \kappa_1). c_2)~c_1 \equiv
+        [c_1/\alpha]c_2 : [c_1/\alpha]\kappa_2}
+      {\Gamma \vdash c_1 : \kappa_1
+      &\Gamma, \alpha : \kappa_1 \vdash c_2 : \kappa_2
+      }
+  \]
+  \[
+    \infer{\Gamma \vdash \pi_1~\langle c_1, c_2 \rangle \equiv c_1 : \kappa_1}
+      {\Gamma \vdash c_1 : \kappa_1
+      &\Gamma \vdash c_2 : \kappa_2
+      }
+    \qquad
+    \infer{\Gamma \vdash \pi_2~\langle c_1, c_2 \rangle \equiv c_2 : \kappa_2}
+      {\Gamma \vdash c_1 : \kappa_1
+      &\Gamma \vdash c_2 : \kappa_2
+      }
+  \]
+  \[
+    \infer{\Gamma \vdash c_1 \to c_2 \equiv c_1' \to c_2' : \T}
+      {\Gamma \vdash c_1 \equiv c_1' : \T
+      &\Gamma \vdash c_2 \equiv c_2' : \T
+      }
+    \qquad
+    \infer{\Gamma \vdash \forall (\alpha : \kappa).c \equiv \forall(\alpha : \kappa').c' : \T}
+      {\Gamma \vdash \kappa \equiv \kappa' : \kind
+      &\Gamma, \alpha : \kappa \vdash c \equiv c' : \T
+      }
+  \]
+Extensionality rules:
+\[
+  \infer{\Gamma \vdash c \equiv c' : \Pi(\alpha : \kappa_1) \kappa_2}
+    {\Gamma \vdash \kappa_1 : \kind
+    &\Gamma, \alpha : \kappa_1 \vdash c~\alpha \equiv c'~\alpha
+    &\deduce{\left[ \Gamma \vdash c \equiv c' : \Pi(\alpha : \kappa_1).\kappa_2' \right]}
+      {
+        \left[\deduce{\Gamma \vdash c : \Pi(\alpha : \kappa_1).\kappa_2'}
+              {\Gamma \vdash c' : \Pi(\alpha : \kappa_1).\kappa_2''}\right]
+      }
+    }
+\]
+\[
+  \infer{\Gamma \vdash c \equiv c' : \Sigma(\alpha : \kappa_1).\kappa_2}
+    {\Gamma \vdash \pi_1~c \equiv \pi_1~c' : \kappa_1
+    &\Gamma \vdash \pi_2~c \equiv \pi_2~c' : [\pi_1~c/\alpha]\kappa_2
+    &\Gamma, \alpha : \kappa_1 \vdash \kappa_2 : \kind
+    }
+\]
+\end{judgment}
+The $\forall$ type constructor rule is the only reason we had to define kind equivalence; for the
+other rules where we invoke equivalence, we could have simply used structural equality of kinds.
+The bracketed premises in the $\Pi$ extensionality rule are the so-called ``nuisance premises''
+needed for the proofs to go through. There are two sets of bracketed premises, so there are
+actually two rules differing only in which set of bracketed premises you choose.\\
+
+\noindent\emph{Singletons:}
+\[
+  \infer{\Gamma \vdash c \equiv c' : \kappa'}
+    {\Gamma \vdash c \equiv c' : \kappa
+    &\Gamma \vdash \kappa \le \kappa'
+    }
+  \qquad
+  \infer[\star]{\Gamma \vdash c \equiv c' : \T}{\Gamma \vdash c : \S(c')}
+  \qquad
+  \infer{\Gamma \vdash c \equiv c' : \S(c)}{\Gamma \vdash c \equiv c' : \T}
+\]
+
+Phew!
+For term formation, only one rule changes: checking kind ok-ness for
+type abstraction.
+
+(We went through some examples in lecture, but nothing that doesn't follow from the rules
+given above. Maybe I'll add them later.)
+
+%TODO: Add examples
