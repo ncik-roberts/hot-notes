@@ -38,6 +38,18 @@ to indicate the input and a superscript $-$ to indicate the output.
     &\Gamma \vdash e_2 \Leftarrow \tau_1
     }
 \]
+\[
+  \infer
+    {\Gamma \vdash \Lambda (\alpha : \kappa).e \Rightarrow \forall (\alpha : \kappa).\tau}
+    {\Gamma, \alpha : \kappa \vdash e \Rightarrow \tau}
+  \qquad
+  \infer
+    {\Gamma \vdash e[c] \Rightarrow [c/\alpha]\tau'}
+    {\Gamma \vdash e \Rightarrow \tau
+    &\tau \Downarrow \forall (\alpha : \kappa).\tau'
+    &\Gamma \vdash c \Leftarrow \kappa
+    }
+\]
 \end{judgment}
 
 Unlike 15-317, we can synthesize the type of a lambda term since we have the type
@@ -56,17 +68,6 @@ on this.}
     &\Gamma \vdash \tau \Leftrightarrow \tau' : \T
     }
   \qquad
-  \infer
-    {\Gamma \vdash \Lambda (\alpha : \kappa).e \Rightarrow \forall (\alpha : \kappa).\tau}
-    {\Gamma, \alpha : \kappa \vdash e \Rightarrow \tau}
-\]
-\[
-  \infer
-    {\Gamma \vdash e[c] \Rightarrow [c/\alpha]\tau'}
-    {\Gamma \vdash e \Rightarrow \tau
-    &\tau \Downarrow \forall (\alpha : \kappa).\tau'
-    &\Gamma \vdash c \Leftarrow \kappa
-    }
 \]
 \end{judgment}
 
