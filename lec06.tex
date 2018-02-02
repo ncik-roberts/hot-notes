@@ -1,0 +1,244 @@
+\sectionwithdate{Algorithmic Rules for the SKC}{2/1/2018}
+
+\subsection{Judgments}
+These should look familiar. We update them to account for singleton kinds.
+
+\begin{align*}
+  \Gamma^+ &\vdash e^+ \Rightarrow \tau^- &&\text{type synthesis/inference}\\
+  \Gamma^+ &\vdash e^+ \Leftarrow \tau^+ &&\text{type checking/analysis}\\
+  \Gamma^+ &\vdash c^+ \Rightarrow \kappa^- &&\text{kind synthesis}\\
+  \Gamma^+ &\vdash c^+ \Leftarrow \kappa^+ &&\text{checking kind}\\
+  \Gamma^+ &\vdash \kappa^+ \Leftarrow \kind &&\text{kind checking (a kind)}\\
+  \Gamma^+ &\vdash \kappa^+ \trianglelefteq \kappa'^+ &&\text{subkinding}\\
+  \Gamma^+ &\vdash c^+ \Leftrightarrow c'^+ &&\text{algorithmic equivalence}\\
+  \Gamma^+ &\vdash q_1^+ \leftrightarrow q_2^+ : \kappa^- &&\text{algorithmic path equivalence}\\
+  \Gamma^+ &\vdash c^+ \Downarrow q^- &&\text{weak-head normalization}\\
+  \Gamma^+ &\vdash c^+ \leadsto c^- &&\text{weak-head reduction}\\
+  \Gamma^+ &\vdash p^+ \uparrow \kappa^- &&\text{natural kind}
+\end{align*}
+
+The main thing to note is that we now need a context for weak-head reduction, since
+it tells us which variables are bound to which singletons.
+
+\subsection{Terms}
+For type checking, we import \thref{2:ty-check} directly with no change.
+
+For type inference, we make superficial changes to \thref{2:ty-synth}. Here's a representative
+updated rule, with a context for weak-head normalization:
+
+\[ \infer{\Gamma \vdash e_1~e_2 \Rightarrow \tau'}
+        {\Gamma \vdash e_1 \Rightarrow \tau_1
+        &\Gamma \vdash \tau_1 \Downarrow \tau \rightarrow \tau'
+        &\Gamma \vdash e_2 \Leftarrow \tau
+        }
+\]
+
+We also check that the kind is indeed virtuous in the type abstraction term.
+\[
+  \infer{\Gamma \vdash \Lambda(\alpha : \kappa).e \Rightarrow \forall(\alpha : \kappa).\tau}
+    {\Gamma \vdash \kappa \Leftarrow \kind
+    &\Gamma, \alpha : \kappa \vdash e \Rightarrow \tau
+   }
+\]
+
+\subsection{Kinds and types}
+\begin{judgment}[Checking kind]
+  $\Gamma \vdash \kappa \Leftarrow \kind$
+  \[
+    \infer{\Gamma \vdash \T \Leftarrow \kind}{}
+    \qquad
+    \infer{\Gamma \vdash \S(c) \Leftarrow \kind}
+          {\Gamma \vdash c \Leftarrow \T}
+  \]
+  \[
+    \infer{
+      \deduce
+        {\Gamma \vdash \Pi(\alpha : \kappa_1).\kappa_2 \Leftarrow \kind}
+        {\Gamma \vdash \Sigma(\alpha : \kappa_1).\kappa_2 \Leftarrow \kind}
+      }
+      {\Gamma \vdash \kappa_1 \Leftarrow \kind
+      &\Gamma, \alpha : \kappa_1 \Leftarrow\kind
+      }
+  \]
+\end{judgment}
+
+\begin{judgment}[Kind checking]
+  $\Gamma \vdash c \Leftarrow \kappa$
+  \[
+    \infer
+      {\Gamma \vdash c \Leftarrow \kappa}
+      {\Gamma \vdash c \Rightarrow \kappa'
+      &\Gamma \vdash \kappa' \trianglelefteq \kappa
+      }
+  \]
+\end{judgment}
+
+\begin{judgment}[Kind synthesis]
+  $\Gamma \vdash c \Rightarrow \kappa$
+  \[
+    \infer[\star]
+      {\Gamma \vdash \alpha \Rightarrow \S(\alpha : \kappa)}
+      {\Gamma(\alpha) = \kappa}
+  \]
+  \[
+    \infer{\Gamma \vdash \lambda(\alpha : \kappa).c \Rightarrow \Pi(\alpha : \kappa). \kappa'}
+      {\Gamma, \alpha : \kappa \vdash c \Rightarrow \kappa'
+      &\Gamma \vdash \kappa \Leftarrow \kind
+      }
+    \qquad
+    \infer{\Gamma \vdash c_1~c_2 \Rightarrow [c_2 / \alpha] \kappa'}
+      {\Gamma \vdash c_1 \Rightarrow \Pi(\alpha : \kappa). \kappa'
+      &\Gamma \vdash c_2 \Leftarrow \kappa
+      }
+  \]
+  \[
+    \infer[\star]{\Gamma \vdash \langle c_1, c_2 \rangle : \kappa_1 \times \kappa_2}
+      {\Gamma \vdash c_1 \Rightarrow \kappa_1
+      &\Gamma \vdash c_2 \Rightarrow \kappa_2
+      }
+    \qquad
+    \infer{\Gamma \vdash \pi_1~c \Rightarrow \kappa_1}
+      {\Gamma \vdash c \Rightarrow \Sigma(\alpha : \kappa_1).\kappa_2}
+    \qquad
+    \infer{\Gamma \vdash \pi_2~c \Rightarrow [\pi_1~c/\alpha]\kappa_2}
+      {\Gamma \vdash c \Rightarrow \Sigma(\alpha : \kappa_1).\kappa_2}
+  \]
+  \[
+    \infer{\Gamma \vdash \tau_1 \rightarrow \tau_2 \Rightarrow \S(\tau_1 \rightarrow \tau_2)}
+      {\Gamma \vdash \tau_1 \Leftarrow \T
+      &\Gamma \vdash \tau_2 \Leftarrow \T
+      }
+    \qquad
+    \infer
+      {\Gamma \vdash \forall (\alpha: \kappa).\tau \Rightarrow \S(\forall(\alpha : \kappa).\tau)}
+      {\Gamma \vdash \kappa \Leftarrow \kind
+      &\Gamma, \alpha : \kappa \vdash \tau \Leftarrow \T
+      }
+  \]
+\end{judgment}
+
+The singleton rule is where the action is. We don't just report the kind of $\alpha$ as
+$\T$; we want to report the \emph{principal} kind of $\alpha$.
+
+In the application rule, notice that we don't weak-head normalize the kind inferred for
+$c_1$. This is because there's only one way for a dependent product kind to look. (The version
+of this statement for $\T$ doesn't hold, of course, because of singleton kinds.)
+
+For the introductory form for product, you might be alarmed that we're not using a dependent sum.
+Don't be---there's always a way to write the kind of a pair without the dependent sum. However,
+when dealing with, say, a variable given a dependent sum kind, we still need the machinery to
+deal with that. But be careful to correctly shift de Bruijn indices with this rule.
+
+\begin{judgment}[Subkinding]
+  $\Gamma \vdash \kappa_1 \trianglelefteq \kappa_2$
+  \[
+    \infer{\Gamma \vdash \T \trianglelefteq \T}{}
+    \qquad
+    \infer[\star]{\Gamma \vdash \S(c) \trianglelefteq \T}{}
+  \]
+  \[
+    \infer{\Gamma \vdash \S(c) \trianglelefteq \S(c')}{\Gamma \vdash c \Leftrightarrow c' : \T}
+  \]
+  \[
+    \infer{\Gamma \vdash \Sigma(\alpha : \kappa_1). \kappa_2 \trianglelefteq
+      \Sigma(\alpha : \kappa_1').\kappa_2'}
+      {\Gamma \vdash \kappa_1 \trianglelefteq \kappa_1'
+      &\Gamma, \alpha : \kappa_1 \vdash \kappa_2 \trianglelefteq \kappa_2'
+      }
+    \qquad
+    \infer{\Gamma \vdash \Pi(\alpha : \kappa_1). \kappa_2 \trianglelefteq \Pi(\alpha: \kappa_1'). \kappa_2'}
+    {\Gamma \vdash \kappa_1' \trianglelefteq \kappa_1
+    &\Gamma, \alpha : \kappa_1' \vdash \kappa_2 \trianglelefteq \kappa_2'
+    }
+  \]
+\end{judgment}
+
+These algorithmic rules don't contain provisions for kind-goodness checks in the same way
+that the declarative rules do. We only perform such checks when evaluating a kind provided by
+the programmer, such as in the $\Lambda$ term. We omit these checks because it's sound to do so.
+I omit the list of soundness rules because they are only interesting if you're proving properties
+about these rules, which I am not.
+
+%TODO: Stop being a baby and transcribe the soundness rules
+
+\begin{judgment}[Algorithmic equivalence] $\Gamma \vdash c \Leftrightarrow c' : \kappa$
+  \[
+    \infer[\star]{\Gamma \vdash c \Leftrightarrow c' : \S(c'')}{}
+  \]
+  \[
+    \infer[\star]
+      {\Gamma \vdash c \Leftrightarrow c' : \Pi(\alpha : \kappa_1). \kappa_2}
+      {\Gamma, \alpha : \kappa_1 \vdash c~\alpha \Leftrightarrow c"~\alpha : \kappa_2}
+    \qquad
+    \infer
+      {\Gamma \vdash c \Leftrightarrow c' : \Sigma(\alpha : \kappa_1). \kappa_2}
+      {\Gamma \vdash \pi_1~c \Leftrightarrow \pi_1 c' : \kappa_1
+      &\Gamma \vdash \pi_2~c \Leftrightarrow \pi_2c' : [\pi~c/\alpha]\kappa_2
+      }
+  \]
+  \[
+    \infer{\Gamma \vdash c_1 \Leftrightarrow c_2 : \T}
+      {\Gamma \vdash c_1 \Downarrow c_1'
+      &\Gamma\vdash c_2 \Downarrow c_2'
+      &\Gamma \vdash c_1' \leftrightarrow c_2' : \T
+      }
+  \]
+\end{judgment}
+
+The singleton rule follows from regularity (i.e. soundness). The other starred rule is starred
+so you know to watch out for shifting indices.
+
+The kind has gotten smaller throughout this judgment. However, when dealing with structural
+equivalence, the kind actually gets \emph{larger}, and that's why it's so dang hard to prove
+termination for the algorithm described by these rules.
+
+Weak-head normalization is the same as \thref{2:whn}, but now threading a context $\Gamma$
+through the premises and conclusions.
+
+\begin{judgment}[Weak-head reduction]
+  $\Gamma \vdash c \leadsto c'$
+  \[
+    \infer{\Gamma \vdash (\lambda(\alpha : \kappa).c)~c' \leadsto [c'/\alpha]c}{}
+    \qquad
+    \infer{\Gamma \vdash c_1~c_2 \leadsto c_1'~c_2}{\Gamma \vdash c_1 \leadsto c_1'}
+  \]
+  \[
+    \infer{\Gamma \vdash \pi_i~\langle c_1, c_2 \rangle \leadsto c_i}{}
+    \qquad
+    \infer{\Gamma \vdash \pi_i~c \leadsto \pi_i~c'}{\Gamma\vdash c \leadsto c'}
+  \]
+  \[
+    \infer[\star]{\Gamma \vdash c \leadsto c'}{\Gamma \vdash c \uparrow \S(c')}
+  \]
+\end{judgment}
+
+We want the starred rule to only apply to paths, since otherwise it's wasteful. You can
+imagine this rule as looking up the path in the context, but as stupidly as possible. Don't
+be clever.
+
+\begin{judgment}[Natural kind. Don't be clever.]
+  $\Gamma \vdash p \uparrow \kappa$
+  \[
+    \infer{\Gamma \vdash \alpha \uparrow \kappa}{\Gamma(\alpha) = \kappa}
+    \qquad
+    \infer{\Gamma \vdash p~c \uparrow [c/\alpha]\kappa_2}
+      {\Gamma \vdash p \uparrow \Pi(\alpha : \kappa_1).\kappa_2}
+    \qquad
+    \infer{\Gamma \vdash p \uparrow \Sigma(\alpha : \kappa_1).\kappa_2}
+      {\deduce
+        {\Gamma \vdash \pi_1~p \uparrow \kappa_1}
+        {\Gamma \vdash \pi_2~p \uparrow [\pi_1~p/\alpha]\kappa_2}
+      }
+  \]
+\end{judgment}
+
+Remember that whnf is either a lambda, a $\forall$-type, or a path. We don't want $\uparrow$ rules
+for lambda or $\forall$, since $\Gamma \vdash \lambda \cdots \uparrow \T$, which is not even
+what we're looking for with the natural kind rules. There's also no need to look up
+a natural kind for $c_1$ when performing the step $c_1~c_2 \leadsto c_1'~c_2$---this
+constructor can never be a singleton, so why bother looking?
+
+There is also a notion of completeness for these algorithmic rules with respect to the
+declarative rules from last lecture.
+
+\emph{Note:} Structural equivalence was not covered. We resume with that next lecture.

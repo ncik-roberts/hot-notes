@@ -22,7 +22,7 @@ to indicate the input and a superscript $-$ to indicate the output.
 
 \subsection{Inference Rules}
 
-\begin{judgment}[Type synthesis]
+\begin{judgment}[Type synthesis]\thlabel{2:ty-synth}
 \[ \infer{\Gamma \vdash x \Rightarrow \tau}{\Gamma(x) = \tau} \]
 \[
   \infer
@@ -60,7 +60,7 @@ to $\tau_1 \rightarrow \tau_2$.\footnote{I'm still not clear on why we can rely 
 to correctly ``normalize'' when it seemed to be a theme of lecture that we cannot rely
 on this.}
 
-\begin{judgment}[Type checking]
+\begin{judgment}[Type checking]\thlabel{2:ty-check}
 \[
   \infer
     {\Gamma \vdash e \Leftarrow \tau}
@@ -152,7 +152,7 @@ only place in \emph{weak head} normal form, where an arrow constructor or
 a universal constructor is at the outermost level. (That is, we don't recursively
 normalize.)
 
-\begin{judgment}[Weak-head normalization]
+\begin{judgment}[Weak-head normalization]\thlabel{2:whn}
 \[
   \infer
     {c \Downarrow c''}
