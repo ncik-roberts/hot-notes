@@ -224,11 +224,12 @@ be clever.
     \infer{\Gamma \vdash p~c \uparrow [c/\alpha]\kappa_2}
       {\Gamma \vdash p \uparrow \Pi(\alpha : \kappa_1).\kappa_2}
     \qquad
-    \infer{\Gamma \vdash p \uparrow \Sigma(\alpha : \kappa_1).\kappa_2}
+    \infer
       {\deduce
         {\Gamma \vdash \pi_1~p \uparrow \kappa_1}
         {\Gamma \vdash \pi_2~p \uparrow [\pi_1~p/\alpha]\kappa_2}
       }
+      {\Gamma \vdash p \uparrow \Sigma(\alpha : \kappa_1).\kappa_2}
   \]
 \end{judgment}
 
