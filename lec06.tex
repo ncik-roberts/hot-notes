@@ -97,10 +97,10 @@ We also check that the kind is indeed virtuous in the type abstraction term.
       &\Gamma \vdash c_2 \Rightarrow \kappa_2
       }
     \qquad
-    \infer{\Gamma \vdash \pi_1~c \Rightarrow \kappa_1}
+    \infer{\Gamma \vdash \pi_1c \Rightarrow \kappa_1}
       {\Gamma \vdash c \Rightarrow \Sigma(\alpha : \kappa_1).\kappa_2}
     \qquad
-    \infer{\Gamma \vdash \pi_2~c \Rightarrow [\pi_1~c/\alpha]\kappa_2}
+    \infer{\Gamma \vdash \pi_2c \Rightarrow [\pi_1c/\alpha]\kappa_2}
       {\Gamma \vdash c \Rightarrow \Sigma(\alpha : \kappa_1).\kappa_2}
   \]
   \[
@@ -172,8 +172,8 @@ about these rules, which I am not.
     \qquad
     \infer
       {\Gamma \vdash c \Leftrightarrow c' : \Sigma(\alpha : \kappa_1). \kappa_2}
-      {\Gamma \vdash \pi_1~c \Leftrightarrow \pi_1 c' : \kappa_1
-      &\Gamma \vdash \pi_2~c \Leftrightarrow \pi_2c' : [\pi~c/\alpha]\kappa_2
+      {\Gamma \vdash \pi_1c \Leftrightarrow \pi_1 c' : \kappa_1
+      &\Gamma \vdash \pi_2c \Leftrightarrow \pi_2c' : [\pi_1c/\alpha]\kappa_2
       }
   \]
   \[
@@ -226,8 +226,8 @@ be clever.
     \qquad
     \infer
       {\deduce
-        {\Gamma \vdash \pi_1~p \uparrow \kappa_1}
-        {\Gamma \vdash \pi_2~p \uparrow [\pi_1~p/\alpha]\kappa_2}
+        {\Gamma \vdash \pi_1p \uparrow \kappa_1}
+        {\Gamma \vdash \pi_2p \uparrow [\pi_1p/\alpha]\kappa_2}
       }
       {\Gamma \vdash p \uparrow \Sigma(\alpha : \kappa_1).\kappa_2}
   \]

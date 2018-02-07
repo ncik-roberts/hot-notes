@@ -26,10 +26,10 @@ As an introduction to this lecture, we extend \thref{sgk:type} with more rules.
     \qquad
   \]
   \[
-    \infer{\Gamma \vdash \pi_1~c : \kappa_1}
+    \infer{\Gamma \vdash \pi_1c : \kappa_1}
       {\Gamma \vdash c : \Sigma (\alpha : \kappa_1).\kappa_2}
     \qquad
-    \infer{\Gamma \vdash \pi_2~c : [\pi_1~c/\alpha]\kappa_2}
+    \infer{\Gamma \vdash \pi_2c : [\pi_1c/\alpha]\kappa_2}
       {\Gamma \vdash c : \Sigma (\alpha : \kappa_1).\kappa_2}
   \]
 Same as before:
@@ -58,7 +58,7 @@ uniquely determines the type.
   \S(c : \T) &= \S(c)\\
   \S(c : \Pi(\alpha : \kappa_1).\kappa_2) &= \Pi(\alpha : \kappa_1).\S(c~\alpha : \kappa_2)\\
   \S(c : \Sigma(\alpha : \kappa_1).\kappa_2) &=
-    \S(\pi_1~c : \kappa_1) \times \S(\pi_2~c : [\pi_1~c/\alpha]\kappa_2)\\
+    \S(\pi_1c : \kappa_1) \times \S(\pi_2c : [\pi_1c/\alpha]\kappa_2)\\
   \S(c : \S(c')) &= \S(c)
 \end{align*}
 It is for ease of proof that we write the third rule non-dependently and the
@@ -83,8 +83,8 @@ called extensionality rules. In addition to \thref{sgk:incomplete}, we add the r
       }
     \qquad
     \infer{\Gamma \vdash c : \Sigma(\alpha : \kappa_1).\kappa_2}
-      {\Gamma \vdash \pi_1~c : \kappa_1
-      &\Gamma \vdash \pi_2~c : [\pi_1~c/\alpha]\kappa_2
+      {\Gamma \vdash \pi_1c : \kappa_1
+      &\Gamma \vdash \pi_2c : [\pi_1c/\alpha]\kappa_2
       &\Gamma, \alpha : \kappa_1 \vdash \kappa_2 : \kind
       }
   \]
@@ -208,8 +208,8 @@ Compatibility rules:
     \qquad
     \infer{
       \deduce
-         {\Gamma \vdash \pi_2~c \equiv \pi_2 c' : [\pi_1~c/\alpha]\kappa_2}
-         {\Gamma \vdash \pi_1~c \equiv \pi_1 c' : \kappa_1}
+         {\Gamma \vdash \pi_2c \equiv \pi_2 c' : [\pi_1c/\alpha]\kappa_2}
+         {\Gamma \vdash \pi_1c \equiv \pi_1 c' : \kappa_1}
       }
       {\Gamma \vdash c \equiv c' : \Sigma(\alpha : \kappa_1).\kappa_2}
   \]
@@ -223,12 +223,12 @@ Compatibility rules:
       }
   \]
   \[
-    \infer{\Gamma \vdash \pi_1~\langle c_1, c_2 \rangle \equiv c_1 : \kappa_1}
+    \infer{\Gamma \vdash \pi_1\langle c_1, c_2 \rangle \equiv c_1 : \kappa_1}
       {\Gamma \vdash c_1 : \kappa_1
       &\Gamma \vdash c_2 : \kappa_2
       }
     \qquad
-    \infer{\Gamma \vdash \pi_2~\langle c_1, c_2 \rangle \equiv c_2 : \kappa_2}
+    \infer{\Gamma \vdash \pi_2\langle c_1, c_2 \rangle \equiv c_2 : \kappa_2}
       {\Gamma \vdash c_1 : \kappa_1
       &\Gamma \vdash c_2 : \kappa_2
       }
@@ -258,8 +258,8 @@ Extensionality rules:
 \]
 \[
   \infer{\Gamma \vdash c \equiv c' : \Sigma(\alpha : \kappa_1).\kappa_2}
-    {\Gamma \vdash \pi_1~c \equiv \pi_1~c' : \kappa_1
-    &\Gamma \vdash \pi_2~c \equiv \pi_2~c' : [\pi_1~c/\alpha]\kappa_2
+    {\Gamma \vdash \pi_1c \equiv \pi_1c' : \kappa_1
+    &\Gamma \vdash \pi_2c \equiv \pi_2c' : [\pi_1c/\alpha]\kappa_2
     &\Gamma, \alpha : \kappa_1 \vdash \kappa_2 : \kind
     }
 \]

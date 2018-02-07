@@ -132,8 +132,8 @@ the singleton kind calculus.
   \qquad
   \infer
     {\Gamma \vdash c \Leftrightarrow c' : \kappa_1 \times \kappa_2}
-    {\Gamma \vdash \pi_1~c \Leftrightarrow \pi_1~c' : \kappa_1
-    &\Gamma \vdash \pi_2~c \Leftrightarrow \pi_2~c' : \kappa_2
+    {\Gamma \vdash \pi_1c \Leftrightarrow \pi_1c' : \kappa_1
+    &\Gamma \vdash \pi_2c \Leftrightarrow \pi_2c' : \kappa_2
     }
 \]
 \[
@@ -187,8 +187,8 @@ The definitions for path and whnf are curiously familiar.
   \text{path}~p \bnfeq
   \alpha
   \alt p~c
-  \alt \pi_1~p
-  \alt \pi_2~p\\
+  \alt \pi_1p
+  \alt \pi_2p\\
   \text{whnf}~q \bnfeq
   p
   \alt c \rightarrow c
