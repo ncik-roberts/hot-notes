@@ -1,0 +1,172 @@
+\sectionwithdate{A Taste of CPL in CPS}{2/6/2018}
+
+First, let's tie up a loose end: structural equivalence of paths.
+
+\begin{judgment}[Structural equivalence]
+  $\Gamma \vdash  p \leftrightarrow p' : \kappa$
+  \[
+    \infer{\Gamma \vdash \alpha \leftrightarrow \alpha : \kappa}
+      {\Gamma(\alpha) = \kappa}
+  \]
+  \[
+    \infer[\star]{\Gamma \vdash p~c \leftrightarrow p'~c' : [c/\alpha]\kappa_2}
+      {\Gamma \vdash p \leftrightarrow p' : \Pi(\alpha : \kappa_1).\kappa_2
+      &\Gamma \vdash c \Leftrightarrow c' : \kappa_1
+      }
+  \]
+  \[
+    \infer{\Gamma \vdash \pi_1 p \leftrightarrow \pi_1 p' : \kappa_1}
+      {\Gamma \vdash p \leftrightarrow p' : \Sigma(\alpha : \kappa_1).\kappa_2}
+    \qquad
+    \infer{\Gamma \vdash \pi_2p \leftrightarrow \pi_2p' : [\pi p/\alpha]\kappa_2}
+      {\Gamma \vdash p \leftrightarrow p' : \Sigma(\alpha : \kappa_1).\kappa_2}
+  \]
+  \[ \infer{\Gamma \vdash (c_1 \rightarrow c_2) \leftrightarrow (c_1' \rightarrow c_2') : \T}
+      {\Gamma \vdash c_1 \Leftrightarrow c_2' : \T
+      &\Gamma \vdash c_2 \Leftrightarrow c_2' : \T
+      }
+    \qquad
+    \infer{\Gamma \vdash \forall(\alpha : \kappa).c \leftrightarrow
+            \forall(\alpha : \kappa').c' : \T}
+      {\Gamma \vdash \kappa \Leftrightarrow \kappa' : \kind
+      &\Gamma, \alpha : \kappa \vdash c \Leftrightarrow c' : \T
+      }
+  \]
+\end{judgment}
+In the starred rule, we could have either substituted $c$ or $c'$ for $\alpha$; either
+way, the proof is made annoying. We introduced one more judgment along the way:
+\begin{judgment}[Kind equivalence]
+  $\Gamma \vdash \kappa \Leftrightarrow \kappa' : \kind$
+  \[
+    \infer{\Gamma \vdash \T \Leftrightarrow \T : \kind}{}
+    \qquad
+    \infer{\Gamma \vdash \S(c) \Leftrightarrow \S(c') : \kind}
+      {\Gamma \vdash c \Leftrightarrow c' : \T}
+  \]
+  \[
+    \infer
+      {\deduce
+        {\Gamma \vdash \Sigma(\alpha : \kappa_1).\kappa_2 \Leftrightarrow
+          \Sigma(\alpha : \kappa_1').\kappa_2' : \kind}
+        {\Gamma \vdash \Pi(\alpha : \kappa_1).\kappa_2 \Leftrightarrow
+          \Pi(\alpha : \kappa_1').\kappa_2' : \kind}
+      }
+      {\Gamma \vdash \kappa_1 \Leftrightarrow \kappa_1' : \kind
+      &\Gamma, \alpha : \kappa_1 \vdash \kappa_2 \Leftrightarrow \kappa_2' : \kind
+      }
+  \]
+\end{judgment}
+Done!
+
+\subsection{CPS conversion}
+IL-Direct is roughly the core ML language. In this phase, we will translate IL-Direct
+to IL-CPS using, well, CPS conversion.
+
+\paragraph{IL-Direct}
+\begin{bnf}
+  \tau \bnfeq
+  \alpha
+  \alt \tau \rightarrow \tau
+  \alt \forall(\alpha : \kappa). \tau
+  \alt \tau \times \tau
+  \alt \exists(\alpha : \kappa).\tau\\
+  e \bnfeq x \alt \lambda(x:\tau).e \alt \cdots
+\end{bnf}
+
+\paragraph{IL-CPS}
+\begin{bnf}
+  \kappa \bnfeq \textit{(same as SKC)}\\
+  c \bnfeq \textit{(same as SKC)}
+  \alt c \times c
+  \alt \exists(\alpha : \kappa).c
+  \alt \neg c
+  \alt \unit\\
+  v \bnfeq x \alt \langle v, v \rangle \alt
+    \pack{c}{v}{\exists (\alpha : \kappa).\tau}
+    \alt \lambda(x : \tau).e \alt \ast\\
+  e \bnfeq
+    \letv{x}{v}{e}
+    \alt \letv{x}{\pi_i v}{e}
+    \alt \unpack{\alpha}{x}{v}{e}
+    \alt v~v
+    \alt \halt
+\end{bnf}
+
+Two typing judgments are our main concern at the term level.
+
+\begin{judgment}[Value typing]
+  $\Gamma \vdash v : \tau$
+  \[
+    \infer{\Gamma \vdash x : \tau}{\Gamma(x) = \tau}
+    \qquad
+    \infer{\Gamma \vdash \langle v_1, v_2 \rangle : \tau_1 \times \tau_2}
+      {\Gamma \vdash v_1 : \tau_1
+      &\Gamma \vdash v_2 : \tau_2
+      }
+    \qquad
+    \infer{\Gamma \vdash \ast : \unit}{}
+  \]
+  \[
+    \infer{\Gamma \vdash \pack{c}{v}{\exists(\alpha : \kappa).\tau}
+      : \exists(\alpha : \kappa).\tau}
+      {\Gamma \vdash c : \kappa
+      &\Gamma \vdash v : [c/\alpha]\tau
+      &\Gamma, \alpha : \kappa \vdash \tau : \T
+      }
+      \qquad
+    \infer{\Gamma \vdash \lambda(x : \tau).e : \neg \tau}
+      {\Gamma, x : \tau \vdash e : \mathbf 0
+      &\Gamma \vdash \tau : \T
+      }
+  \]
+\end{judgment}
+
+\begin{judgment}[Expression typing]
+  $\Gamma \vdash e : \mathbf 0$
+  \[
+    \infer{\Gamma \vdash \letv x v e : \mathbf{0}}
+      {\Gamma \vdash v : \tau
+      &\Gamma, x : \tau \vdash e : \mathbf 0
+      }
+    \qquad
+    \infer
+      {\Gamma \vdash \letv x {\pi_i v} e: \mathbf 0}
+      {\Gamma \vdash v : \tau_1 \times \tau_2
+      &\Gamma \vdash x : \tau_I \vdash e : \mathbf 0
+      }
+  \]
+  \[
+    \infer
+      {\Gamma \vdash \unpack \alpha x v e : \mathbf 0}
+      {\Gamma \vdash v : \exists (\alpha : \kappa).\tau
+      &\Gamma, \alpha : \kappa, x : \tau \vdash e : \mathbf{0}
+      }
+  \]
+  \[
+    \infer
+      {\Gamma \vdash v_1~v_2 : \mathbf{0}}
+      {\Gamma \vdash v_1 : \neg \tau
+      & \Gamma \vdash v_2 : \tau
+      }
+    \qquad
+    \infer{\Gamma \vdash \halt : \mathbf{0}}{}
+  \]
+\end{judgment}
+
+John Reynolds remarked in his paper \emph{Definitional interpreters for higher-order
+programming languages} that CPS conversion resolves any ambiguities in control flow. For example,
+it's immediately apparent whether the semantics is call-by-value or call-by-name. We can remark
+on additional aspects of CPS conversion. It:
+\begin{enumerate}[1.]
+  \item names all intermediate computations,
+  \item makes control flow explicit, and
+  \item reifies continuations.
+\end{enumerate}
+
+Many compilers do 1 and 2 in what's known as A-normal form, not to be confused with anormal
+form or a normal form. A-normal form is, formally, ``A it until you can't A it anymore.''
+A more descriptive name might be monadic form, or two-thirds CPS.
+
+\subsection{Typing derivation--directed translation}
+We don't want to do syntax-directed translation, since this would involve putting type
+information everywhere in IL-Direct.

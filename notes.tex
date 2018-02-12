@@ -51,6 +51,10 @@
 \newcommand{\alt}{\; \mid \;}
 \newcommand{\altline}{\\&\mid \;}
 \newcommand{\bnfeq}{~~&::=~~}
+\newcommand{\pack}[3]{\mathtt{pack}[#1,#2]~\mathtt{as}~#3}
+\newcommand{\halt}{\mathtt{halt}}
+\newcommand{\letv}[3]{\mathtt{let}~#1=#2~\mathtt{in}~#3}
+\newcommand{\unpack}[4]{\mathtt{unpack}[#1,#2] = #3~\mathtt{in}~#4}
 
 \renewcommand{\int}{\textnormal{\texttt{int}}}
 \newcommand{\unit}{\textnormal{\texttt{unit}}}
@@ -58,6 +62,7 @@
 \newcommand{\T}{\textnormal{\texttt{T}}} % Type kind
 \renewcommand{\S}{\textnormal{\texttt{S}}} % Singleton kind
 \newcommand{\kind}{\textnormal{kind}} % Singleton kind
+\newcommand{\tarbau}{\overline{\tau}}
 
 %-----------------------
 %  Judgment
@@ -87,5 +92,6 @@
 \include{lec04}
 \include{lec05}
 \include{lec06}
+\include{lec07}
 
 \end{document}
