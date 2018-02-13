@@ -1,0 +1,144 @@
+\sectionwithdate{CPL in CPS}{2/8/2018}
+
+The main judgment for today is:
+\[ \Gamma \vdash e : \tau \leadsto k . \ebar \]
+
+Ideally, if $\Gamma \vdash e : \tau \leadsto k.\ebar$, then
+$\Gammabar, k : \neg \taubar \vdash \ebar$. You might be ``k''onfused as to why we
+use $k$ to stand for continuation. Well, it's the law.
+
+\begin{judgment}[Type translation for IL-CPS]
+  \begin{align*}
+    \overline{\alpha} &= \alpha\\
+    \overline{\tau_1 \times \tau_2} &= \taubar_1 \times \taubar_2\\
+    \overline{\tau_1 \to \tau_2} &= \neg (\taubar_1 \times \neg \taubar_2)\\
+    \overline{\exists(\alpha : \kappa).\tau} &= \exists (\alpha : \kappabar).\taubar\\
+    \overline{\forall(\alpha : \kappa).\tau} &= \neg(\exists (\alpha : \kappabar).\neg\taubar)\\
+  \end{align*}
+\end{judgment}
+
+\begin{judgment}[Kontinuation konversion]
+  $\Gamma \vdash e : \tau \leadsto k . \ebar$
+  \[
+    \infer
+      {\Gamma \vdash x : \tau \leadsto k.k~x}
+      {\Gamma(x) = \tau}
+    \qquad
+    \qquad
+    \textnormal{Check:}
+    \quad
+    \infer
+      {\Gammabar, k : \neg \taubar \vdash k~x : \mathbf{0}}
+      {\Gammabar, k : \neg \taubar \vdash k : \neg \taubar
+      &\Gammabar \vdash x : \taubar
+      }
+  \]
+
+  \[
+    \infer
+      {\deduceinv
+        {\Gamma \vdash \langle e_1, e_2 \rangle : \tau_1 \times \tau_2 \leadsto}
+        {\deduceinv
+          {k. \qqqquad}
+          {\deduceinv
+            {\qqquad \mathtt{let}~k_1 = \big(\lambda(x_1 : \taubar_1).}
+            {\deduceinv
+              {\qqqqqquad
+                \mathtt{let}~k_2 = \big(\lambda(x_2 : \taubar_2). k\langle x_1, x_2 \rangle\big)}
+              {\deduceinv
+                {\mathtt{in}~\ebar_2 \quad}
+                {\big) \mathtt{in}~\ebar_1 \qquad}}}}}}
+      {\Gamma \vdash e_1 : \tau_1 \leadsto k_1.\ebar_1
+      &\Gamma \vdash e_2 : \tau_2 \leadsto k_2.\ebar_2
+      }
+  \]
+
+ \[
+   \infer
+     {\deduceinv
+       {\Gamma \vdash \pi_ie : \tau_i \leadsto}
+       {\deduceinv
+         {k. \qqquad}
+         {\deduceinv
+           {\qqqqquad \mathtt{let}~k' = \big(\lambda(x : \taubar_1 \times \taubar_2).}
+           {\deduceinv
+             {\qqqqquad \letv{y}{\pi_i x}{k~y}}
+             {\big) \mathtt{in}~\ebar}}}}}
+    {\Gamma \vdash e : \tau_1 \times \tau_2 \leadsto k'.\ebar}
+ \]
+
+ \[
+   \infer
+     {\deduceinv
+       {\Gamma \vdash \lambda(x : \tau).e : \tau \to \tau' \leadsto}
+       {\deduceinv
+         {k.\qqqqquad}
+         {\deduceinv
+           {k(\lambda (y : \taubar \times \neg \taubar').}
+           {\deduceinv
+             {\qqquad \mathtt{let}~x = \pi_1 y~\mathtt{in}}
+             {\deduceinv
+               {\qqquad \mathtt{let}~k' = \pi_2 y~\mathtt{in}}
+               {\ebar\big) \quad}}}}}}
+    {\Gamma \vdash \tau : \T
+    &\Gamma, x : \tau \vdash e : \tau' \leadsto k'.\ebar}
+ \]
+
+ \[
+   \infer
+     {\deduceinv
+       {\Gamma \vdash e_1~e_2 : \tau' \leadsto}
+       {\deduceinv
+         {k. \qqqquad}
+         {\deduceinv
+           {\qqqqquad \mathtt{let}~k_1 = \big(\lambda (f : \neg(\taubar \times \neg \taubar')).}
+           {\deduceinv
+             {\qqqqqquad \mathtt{let}~k_2 = \big( \lambda(x : \taubar). f\langle x, k \rangle \big)}
+             {\deduceinv
+               {\quad \mathtt{in}~\ebar_2}
+               {\big) \mathtt{in}~\ebar_1 \quad}}}}}}
+    {\Gamma \vdash e_1 : \tau \to \tau' \leadsto k_1.\ebar_1
+    &\Gamma \vdash e_2 : \tau \leadsto k_2. \ebar_2
+    }
+ \]
+
+ %TODO: format
+ \[
+   \infer{\Gamma \vdash \pack{c}{e}{\exists(\alpha : \kappa).\tau}
+     : \exists(\alpha : \kappa).\tau
+     \leadsto k. \letv{k'}{\lambda(x : \overline{[c/\alpha]\tau})
+     k(\pack{\overline{c}}{x}{\exists(\alpha : \kappabar).\taubar})}{\ebar}}
+    {\Gamma \vdash c : \kappa
+    &\Gamma \vdash e : [c/\alpha] \tau
+    &\Gamma, \alpha : \kappa \vdash \tau : \T
+    }
+ \]
+
+ \[
+   \infer
+     {\Gamma \vdash \unpack{\alpha}{x}{e_1}{e_2} : \tau_2
+       \leadsto k. \letv{k_1}{(\lambda(y : \exists(\alpha : \kappabar).\taubar).
+         \unpack{\alpha}{x}{y}{\letv{k_2}{k}{\ebar_2}})}{\ebar_1}}
+     {\Gamma \vdash e_1 : \exists(\alpha : \kappa).\tau
+     &\Gamma, \alpha : \kappa, x : \tau_1 \vdash e_2 : \tau_2 \leadsto \kappa_2.\ebar_2
+     &\Gamma \vdash \tau_2 : \T
+     }
+ \]
+
+ \[
+   \infer{\Gamma \vdash \Lambda(\alpha : \kappa).e : \forall(\alpha : \kappa).\tau \leadsto
+     k. k\big(\lambda(x : \exists(\alpha : \kappabar).\neg \taubar).
+     \unpack{\alpha}{k'}{x}{\ebar}}
+     {\Gamma \vdash k : \kind
+     &\Gamma, \alpha : \kappa \vdash e : \tau \leadsto k' . \ebar
+     }\big)
+\]
+\end{judgment}
+
+To show that the $\mathtt{pack}$/$\mathtt{unpack}$ rules are sound, we would need
+a lemma that:
+\[ \overline{[c_1/\alpha]c_2} = [\overline{c}_1 / \alpha]\overline{c}_2 \]
+This works provided that $\overline{\alpha} = \alpha$. Phrased differently,
+``substitution commutes with translation.'' Finally, the judgment $\Gamma \vdash \tau_2 : \T$
+is needed in the premise of the $\mathtt{unpack}$ rule so that $\alpha$ doesn't escape
+its scope.
