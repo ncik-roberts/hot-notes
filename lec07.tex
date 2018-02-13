@@ -169,4 +169,73 @@ A more descriptive name might be monadic form, or two-thirds CPS.
 
 \subsection{Typing derivation--directed translation}
 We don't want to do syntax-directed translation, since this would involve putting type
-information everywhere in IL-Direct.
+information everywhere in IL-Direct. Here's an example of a type-directed translation
+to warm up to IL-CPS.
+We define $\overline{\cdot} : \text{IL-$X$ types} \to \text{IL-$Y$ types}$ so that
+\begin{align*}
+  \text{if}\quad &\tau \quad \text{is an IL-$X$ type,}\\
+  \text{then}\quad &\taubar \quad \text{is an IL-$Y$ type.}
+\end{align*}
+
+Under this definition, we want to define a judgment
+\[ \Gamma \vdash e : \tau \leadsto \ebar \]
+such that, if $\Gamma \vdash e : \tau$, then $\Gamma\vdash : \tau \leadsto \ebar$ such that
+(roughly) $\Gammabar \vdash \ebar : \taubar$. Just to reiterate: the translation
+of $\tau$ to $\taubar$ is syntax-directed; $\ebar$ is just a meta-variable that we will give
+meaning to with the translation judgment.
+
+\subsection{Stupidification}
+In this section, we define a stupid translation that does nothing meaningful.
+\begin{align*}
+  \overline{\alpha} &= \alpha &\overline{\T} &= \T\\
+  \overline{\tau_1 \to \tau_2} &= \taubar_1 \to \taubar_2 &\overline{\S(c)} &= \S(c)\\
+  \overline{\tau_1 \times \tau_2} &= \taubar_1 \times (\taubar_1 \to \taubar_2) &\overline{\Pi(\alpha : \kappa_1).\kappa_2} &= \Pi(\alpha : \kappabar_1).\kappabar_2\\
+  &&\overline{\Sigma(\alpha : \kappa_1).\kappa_2} &= \Sigma(\alpha : \kappabar_1).\kappabar_2
+\end{align*}
+\begin{align*}
+  \overline{\varepsilon} &= \varepsilon\\
+  \overline{\Gamma, \alpha : \kappa} &= \Gammabar, \alpha : \kappabar\\
+  \overline{\Gamma, x : \tau} &= \Gammabar, x : \taubar
+\end{align*}
+
+I ellide the rules defining the translation judgment that just recursively translate the
+constituent parts. Here are some of the more interesting rules:
+\[
+  \infer
+    {\Gamma \vdash \langle e_1, e_2 \rangle : \tau_1 \times \tau_2
+      \leadsto \langle \ebar_1, \lambda(\_ : \taubar_1) : \ebar_2}
+    {\Gamma \vdash e_1 : \tau_1 \leadsto \ebar_1
+    &\Gamma \vdash e_2 : \tau_2 \leadsto \ebar_2}
+  \qquad
+  \infer
+    {\Gamma \vdash \pi_2e : \tau_2 \leadsto \letv{x}{\ebar}{\pi_2 x(\pi_1 x)}}
+    {\Gamma \vdash e : \tau_1 \times \tau_2 \leadsto \ebar}
+\]
+Now you see why it's important that the translation be type-directed instead of syntax-directed:
+otherwise, we wouldn't have known that $\taubar_1$ in the pair introduction rule.
+
+What are some properties we'd like?
+\paragraph{(Effectiveness.)}
+\begin{enumerate}[1.]
+  \item If $c$ is a constructor, then $\overline{c}$ is defined.
+    (Likewise for $\kappa$ and $\Gamma$.)
+  \item $\Gamma \vdash e : \tau$ is derivable iff $\Gamma \vdash e : \tau \leadsto \ebar$
+    for some $\ebar$.
+\end{enumerate}
+\paragraph{(Static correctness.)}
+\begin{enumerate}[1.]
+  \item If $\vdash \Gamma~\mathsf{ok}$, then $\vdash \Gammabar~\mathsf{ok}$.
+  \item If $\Gamma \vdash \kappa : \kind$, then $\Gammabar \vdash \kappabar : \kind$.
+  \item If $\Gamma \vdash c : \kappa$, then $\Gammabar \vdash \overline{c} : \kappabar$ \ldots
+  \item \ldots and so on, until:
+    If $\Gamma \vdash e : \tau \leadsto \ebar$, then $\Gammabar \vdash \ebar : \taubar$.
+\end{enumerate}
+
+We might want dynamic correctness. But what is it? Dunno.
+
+We might also want coherence: if $\Gamma \vdash e : \tau \leadsto \ebar$ and
+$\Gamma \vdash e : \tau \leadsto \ebar'$, then $\Gammabar \vdash \ebar \cong \ebar' : \taubar$
+for some suitable $\cong$.
+But unfortunately ``$\cong$,'' like the origin of the Donkey Kong Wikia page that claims
+that Funky Kong canonically fought in the Great Ape War,
+remains shrouded in mystery.
